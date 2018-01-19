@@ -6,3 +6,4 @@ out/
 tmp/
 request.xml
 request.xml.sig
+state.yml
