@@ -1,0 +1,24 @@
+Global:
+  outpath: ./out
+  tmppath: ./tmp
+  logpath: ./rknget.log
+  statepath: ./state.yml
+  savetmp: True
+  reqPath: ./request.xml
+  reqPathSig: ./request.xml.sig
+
+DumpLoader:
+  url: http://vigruzki.rkn.gov.ru/services/OperatorRequest/?wsdl
+  retrycount: 5
+  conntimeout: 240
+  sleeptimeout: 60
+  SoapVersion: 1.2
+  dumpfmtver: 2.2
+
+DataMapping:
+  http: httpdom.lst
+  domain: httpdom.lst
+  https: httpsdomm.lst
+  domainmask: httpsdomm.lst
+  ip: ipsub.lst
+  ipsub: ipsub.lst
