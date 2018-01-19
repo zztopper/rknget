@@ -5,11 +5,18 @@ import urllib.parse
 
 
 class RknDumpParser:
+    """
+    RKN dump parser.
+    """
 
     _dumpfile = None
     _datamapping = {}
 
     def __init__(self, dumpfile, datamapping):
+        """
+        :param dumpfile: binary loaded file in ram
+        :param datamapping: hashmap lika 'blocktype' -> 'output filename'
+        """
         self._dumpfile = dumpfile
         self._datamapping = datamapping
 
@@ -29,6 +36,11 @@ class RknDumpParser:
             urllib.parse.urlsplit(urlstr).path
 
     def parse(self):
+        """
+        Parses xml from binary dump has been loaded on init.
+        Has much hardcode caused by shitty dump format
+        :return: parsed entries count
+        """
         xmldump = zipfile.ZipFile(io.BytesIO(self._dumpfile)).read('dump.xml')
 
         xmlroot = xml.etree.ElementTree.XML(xmldump)

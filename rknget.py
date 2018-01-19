@@ -29,19 +29,22 @@ def initLog(logpath):
     return logger
 
 
-def createFolders(**kwargs):
-    try:
-        os.makedirs(kwargs['outpath'], mode=0o700, exist_ok=True)
-        os.makedirs(kwargs['tmppath'], mode=0o700, exist_ok=True)
-    except Exception as e:
-        print(e)
-    finally:
-        return 0
+def createFolders(*args):
+    """
+    Creates nesessary folders
+    :param args: paths tuple
+    :return: Nothing
+    """
+    for path in args:
+        try:
+            os.makedirs(path, mode=0o700, exist_ok=True)
+        finally:
+            pass
 
 def main():
     logger = initLog(config['Global']['logpath'])
 
-    createFolders(**config['Global'])
+    createFolders(config['Global']['outpath'], config['Global']['tmppath'])
 
     # Loading state values from file
     lastRknState = rknstatehandler.RknStateHandler(config['Global']['statepath'])

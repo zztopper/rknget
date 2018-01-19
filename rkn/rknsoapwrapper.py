@@ -1,9 +1,11 @@
 import zeep.client
 import time
-import xml.etree.ElementTree
 
 
 class RknSOAPWrapper:
+    """
+    Class provides dump loading from RKN service via WSDL
+    """
 
     _rknsoapclient = None
     _retryAttempts = 5
@@ -11,6 +13,10 @@ class RknSOAPWrapper:
     _dumpFmtVersion = '2.3'
 
     def __init__(self, url, retryAttempts=5, sleeptimeout=60, dumpfmtver=2.3, **kwargs):
+        """
+        Initiates WSDL service
+        Throws exception if web service is unavailable
+        """
 
         self._rknsoapclient = zeep.client.Client(wsdl=url)
         self._rknsoapclient.options(raw_response=True)
