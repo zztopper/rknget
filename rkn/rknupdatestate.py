@@ -14,11 +14,11 @@ class RknUpdateState:
         self._stateFilename = stateFilename
         self.checkTime = math.ceil(time.time() * 1000)
         try:
-            stateParsed = yaml.load(stateFilename)
+            stateParsed = yaml.load(open(stateFilename))
+            self.dumpTime = stateParsed['Dump']['dumpTime' ]
+            self.dumpTimeU = stateParsed['Dump']['dumpTimeU']
             self.downlTime = stateParsed['Run']['downlTime']
             self.urlsCount = stateParsed['Run']['urlsCount']
-            self.downlTime = stateParsed['Dump']['dumpTime' ]
-            self.urlsCount = stateParsed['Dump']['dumpTimeU']
         except:
             pass
         self._save()

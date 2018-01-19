@@ -11,7 +11,7 @@ DumpLoader:
   url: http://vigruzki.rkn.gov.ru/services/OperatorRequest/?wsdl
   retrycount: 5
   conntimeout: 240
-  sleeptimeout: 60
+  sleeptimeout: 55
   SoapVersion: 1.2
   dumpfmtver: 2.2
 

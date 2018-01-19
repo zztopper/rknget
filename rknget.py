@@ -5,6 +5,8 @@ import logging
 import os
 from rkn import rknupdatestate, rknsoapwrapper, rkndumpparser
 
+
+# Importing configuration
 config = yaml.load(open('config.yml'))
 
 
@@ -26,12 +28,13 @@ def initLog(logpath):
 
     return logger
 
-# Importing configuration
 
 def createFolders(**kwargs):
     try:
-        os.makedirs(outpath, mode=0o700, exist_ok=True)
-        os.makedirs(tmppath, mode=0o700, exist_ok=True)
+        os.makedirs(kwargs['outpath'], mode=0o700, exist_ok=True)
+        os.makedirs(kwargs['tmppath'], mode=0o700, exist_ok=True)
+    except Exception as e:
+        print(e)
     finally:
         return 0
 

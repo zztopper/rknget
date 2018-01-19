@@ -10,16 +10,14 @@ class RknSOAPWrapper:
     _sleeptimeout = 60
     _dumpFmtVersion = '2.3'
 
-    def __init__(self, url, retrycount=5, sleeptimeout=60, dumpfmtver=2.3, **kwargs):
+    def __init__(self, url, retryAttempts=5, sleeptimeout=60, dumpfmtver=2.3, **kwargs):
 
         self._rknsoapclient = zeep.client.Client(wsdl=url)
         self._rknsoapclient.options(raw_response=True)
-        try:
-            self._retryAttempts = retrycount
-            self._sleeptimeout = sleeptimeout
-            self._dumpFmtVersion = str(dumpfmtver)
-        except KeyError:
-            pass
+
+        self._retryAttempts = retryAttempts
+        self._sleeptimeout = sleeptimeout
+        self._dumpFmtVersion = str(dumpfmtver)
 
     def _wsdlCall(self, method, **kwargs):
         """Makes WSDL request
