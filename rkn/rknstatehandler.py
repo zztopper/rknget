@@ -2,7 +2,7 @@ import yaml
 import time
 import math
 
-class RknUpdateState:
+class RknStateHandler:
 
     checkTime = 0
     downlTime = 0

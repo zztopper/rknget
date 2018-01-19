@@ -3,7 +3,7 @@
 import yaml
 import logging
 import os
-from rkn import rknupdatestate, rknsoapwrapper, rkndumpparser
+from rkn import rknstatehandler, rknsoapwrapper, rkndumpparser
 
 
 # Importing configuration
@@ -44,7 +44,7 @@ def main():
     createFolders(**config['Global'])
 
     # Loading state values from file
-    lastRknState = rknupdatestate.RknUpdateState(config['Global']['statepath'])
+    lastRknState = rknstatehandler.RknStateHandler(config['Global']['statepath'])
     # No config found
     if lastRknState.checkTime == 0:
         logger.warning('OK, let\'s start a clean life')
