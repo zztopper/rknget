@@ -3,7 +3,7 @@
 import yaml
 import logging
 import os
-from lib import rknupdatestate, rknsoapwrapper, rkndumpparser
+from rkn import rknupdatestate, rknsoapwrapper, rkndumpparser
 
 config = yaml.load(open('config.yml'))
 
