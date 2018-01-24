@@ -11,15 +11,15 @@ config = yaml.load(open('config.yml'))
 
 
 # Initialising logger, returns logger
-def initLog(logpath):
+def initLog(logpath='log.log', stdoutlvl='DEBUG', logfilelvl='INFO', **kwargs):
     logger = logging.getLogger()
-    logger.setLevel(logging.DEBUG)
+    logger.setLevel(logging.getLevelName(logfilelvl))
     formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
     filehandler = logging.FileHandler(logpath)
-    filehandler.setLevel(logging.INFO)
+    filehandler.setLevel(logging.getLevelName(logfilelvl))
     filehandler.setFormatter(formatter)
     streamhandler = logging.StreamHandler()
-    streamhandler.setLevel(logging.DEBUG)
+    streamhandler.setLevel(logging.getLevelName(stdoutlvl))
     streamhandler.setFormatter(formatter)
     logger.addHandler(filehandler)
     logger.addHandler(streamhandler)
@@ -41,6 +41,7 @@ def createFolders(*args):
         finally:
             pass
 
+
 def saveData(outpath, datamapping, outdata):
     """
     Saves parsed datasets to files defined.
@@ -61,11 +62,14 @@ def saveData(outpath, datamapping, outdata):
             file.write('\n'.join(outdata[datakey]) + '\n')
 
 def main():
-    logger = initLog(config['Global']['logpath'])
+    logger = initLog(**config['Logging'])
 
-    createFolders(*config['Global']['outpath'], config['Global']['tmppath'])
+    createFolders(config['Global']['tmppath'], *config['Global']['outpath'])
 
     # Loading state values from file
+    if not os.path.exists(config['Global']['statepath']):
+        logger.warning('State file is absent, but don\'t worry')
+
     lastRknState = rknstatehandler.RknStateHandler(config['Global']['statepath'])
 
     logger.debug('Obtaining dumpfile from ' + config['DumpLoader']['url'])

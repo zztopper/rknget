@@ -3,7 +3,6 @@ Global:
     - ./out
     - ./new
   tmppath: ./tmp
-  logpath: ./rknget.log
   statepath: ./state.yml
   savetmp: True
   reqPath: ./request.xml
@@ -24,3 +23,8 @@ DataMapping:
   domainmask: httpsdomm.lst
   ip: ipsub.lst
   ipsub: ipsub.lst
+
+Logging:
+  logpath: ./rknget.log
+  stdoutlvl: DEBUG
+  logfilelvl: INFO
