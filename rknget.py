@@ -1,13 +1,29 @@
 #!/usr/bin/env python3
 
+import sys
 import yaml
 import logging
 import os
 from rkn import rknstatehandler, rknsoapwrapper, rkndumpparse
 
 
+CONFIG_PATH = 'config.yml'
 # Importing configuration
-config = yaml.load(open('config.yml'))
+def initConf():
+    """
+    Parses argv, loades config.yml
+    :return: Configuration tree
+    """
+    # Yeah, I'm too laze to use argparse
+    if len(sys.argv) == 1:
+        return yaml.load(open(CONFIG_PATH))
+
+    if len(sys.argv) == 3 and sys.argv[2] == '-c':
+        return yaml.load(open(sys.argv[3]))
+
+    print('Usage: ' + sys.argv[0] + ' (with ./config.yml)\n' +
+          'Usage: ' + sys.argv[0] + ' -c [CONFIG PATH]')
+    exit(0)
 
 
 # Initialising logger, returns logger
@@ -23,8 +39,6 @@ def initLog(logpath='log.log', stdoutlvl='DEBUG', logfilelvl='INFO', **kwargs):
     streamhandler.setFormatter(formatter)
     logger.addHandler(filehandler)
     logger.addHandler(streamhandler)
-
-    logger.debug('Successfully started with config:\n' + str(config))
 
     return logger
 
@@ -62,7 +76,14 @@ def saveData(outpath, datamapping, outdata):
             file.write('\n'.join(outdata[datakey]) + '\n')
 
 def main():
+    config = initConf()
+    if config is None:
+        print('Usage: ')
+        return 0
+
     logger = initLog(**config['Logging'])
+
+    logger.debug('Successfully started with config:\n' + str(config))
 
     createFolders(config['Global']['tmppath'], *config['Global']['outpath'])
 
