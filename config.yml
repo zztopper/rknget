@@ -1,5 +1,7 @@
 Global:
-  outpath: ./out
+  outpath:
+    - ./out
+    - ./new
   tmppath: ./tmp
   logpath: ./rknget.log
   statepath: ./state.yml

@@ -3,7 +3,7 @@
 import yaml
 import logging
 import os
-from rkn import rknstatehandler, rknsoapwrapper, rkndumpparser
+from rkn import rknstatehandler, rknsoapwrapper, rkndumpparse
 
 
 # Importing configuration
@@ -37,20 +37,36 @@ def createFolders(*args):
     """
     for path in args:
         try:
-            os.makedirs(path, mode=0o700, exist_ok=True)
+            os.makedirs(path, mode=0o755, exist_ok=True)
         finally:
             pass
+
+def saveData(outpath, datamapping, outdata):
+    """
+    Saves parsed datasets to files defined.
+    :param outpath: tuple of paths
+    :param datamapping: dict datatype -> filename
+    :param outdata: data dict datatype -> set
+    :return: None
+    """
+
+    datafiledesc = {fname: [
+        open(file=path+'/'+fname, mode='w', buffering=1)
+        for path in outpath
+    ]
+        for fname in set(datamapping.values())
+    }
+    for datakey in outdata:
+        for file in datafiledesc[datamapping[datakey]]:
+            file.write('\n'.join(outdata[datakey]) + '\n')
 
 def main():
     logger = initLog(config['Global']['logpath'])
 
-    createFolders(config['Global']['outpath'], config['Global']['tmppath'])
+    createFolders(*config['Global']['outpath'], config['Global']['tmppath'])
 
     # Loading state values from file
     lastRknState = rknstatehandler.RknStateHandler(config['Global']['statepath'])
-    # No config found
-    if lastRknState.checkTime == 0:
-        logger.warning('OK, let\'s start a clean life')
 
     logger.debug('Obtaining dumpfile from ' + config['DumpLoader']['url'])
     try:
@@ -67,8 +83,7 @@ def main():
     lastRknState.updateTimeStamps(dumpDate['lastDumpDate'],
                                   dumpDate['lastDumpDateUrgently'])
 
-    if lastRknState.downlTime > lastRknState.dumpTime and \
-            lastRknState.downlTime > lastRknState.dumpTimeU:
+    if lastRknState.isActual():
         logger.info('Last dump is actual')
         return 0
 
@@ -85,19 +100,23 @@ def main():
     if config['Global']['savetmp']:
         open(file=config['Global']['tmppath']+'/dump.xml.zip', mode='wb').write(dumpFile)
 
-    # Transforming outdata filenames to paths
-    for key in config['DataMapping']:
-        config['DataMapping'][key] = config['Global']['outpath'] + '/' + config['DataMapping'][key]
-
-    dumpParser = rkndumpparser.RknDumpParser(dumpFile, config['DataMapping'])
     try:
-        urlsCount = dumpParser.parse()
+        outdata = rkndumpparse.parse(dumpFile)
     except Exception as e:
         logger.error(e)
+        lastRknState.updateParseInfo(None)
         return 3
     logger.info('Blocklist was parsed successfully')
 
-    lastRknState.updateInfoOnParse(urlsCount)
+    saveData(config['Global']['outpath'], config['DataMapping'], outdata)
+    logger.info('Parsed data was saved')
+
+    # save debug data to the state file
+    datasetsizes = {dtype: len(outdata[dtype])
+                    for dtype in outdata.keys()}
+    datasetsizes['urlsCount'] = sum(datasetsizes.values())
+
+    lastRknState.updateParseInfo(datasetsizes)
     return 0
 
 
