@@ -8,6 +8,8 @@ from rkn import rknstatehandler, rknsoapwrapper, rkndumpparse
 
 
 CONFIG_PATH = 'config.yml'
+
+
 # Importing configuration
 def initConf():
     """
@@ -56,7 +58,7 @@ def createFolders(*args):
             pass
 
 
-def saveData(outpath, datamapping, outdata):
+def saveData(datamapping, outdata):
     """
     Saves parsed datasets to files defined.
     :param outpath: tuple of paths
@@ -65,15 +67,21 @@ def saveData(outpath, datamapping, outdata):
     :return: None
     """
 
-    datafiledesc = {fname: [
-        open(file=path+'/'+fname, mode='w', buffering=1)
-        for path in outpath
-    ]
-        for fname in set(datamapping.values())
-    }
-    for datakey in outdata:
-        for file in datafiledesc[datamapping[datakey]]:
-            file.write('\n'.join(outdata[datakey]) + '\n')
+    # Cleansing files if any exists
+    for dfiles in datamapping.values():
+        for file in dfiles:
+            open(file, 'w').close()
+
+    for dtype in outdata.keys():
+        # You might not save some data
+        if datamapping.get(dtype) is None:
+            continue
+        # Or you might of course
+        for file in datamapping[dtype]:
+            f = open(file=file, mode='a+t', buffering=1)
+            f.write('\n'.join(outdata[dtype]) + '\n')
+            f.close()
+
 
 def main():
     config = initConf()
@@ -85,7 +93,7 @@ def main():
 
     logger.debug('Successfully started with config:\n' + str(config))
 
-    createFolders(config['Global']['tmppath'], *config['Global']['outpath'])
+    createFolders(config['Global']['tmppath'])
 
     # Loading state values from file
     if not os.path.exists(config['Global']['statepath']):
@@ -131,10 +139,20 @@ def main():
         logger.error(e)
         lastRknState.updateParseInfo(None)
         return 3
-    logger.info('Blocklist was parsed successfully')
+    logger.info('Blocklist has been parsed successfully')
 
-    saveData(config['Global']['outpath'], config['DataMapping'], outdata)
-    logger.info('Parsed data was saved')
+    # Freeing memory
+    del dumpFile
+
+    saveData(config['DataMapping'], outdata)
+
+    if config['Global']['savetmp']:
+        tmpDataMapping = {dtype: [config['Global']['tmppath'] + '/' + dtype]
+                          for dtype in rkndumpparse.datatypes}
+        saveData(tmpDataMapping, outdata)
+        pass
+
+    logger.info('Parsed data have been saved')
 
     # save debug data to the state file
     datasetsizes = {dtype: len(outdata[dtype])

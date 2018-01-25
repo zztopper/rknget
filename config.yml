@@ -1,7 +1,4 @@
 Global:
-  outpath:
-    - ./out
-    - ./new
   tmppath: ./tmp
   statepath: ./state.yml
   savetmp: True
@@ -17,12 +14,18 @@ DumpLoader:
   dumpfmtver: 2.2
 
 DataMapping:
-  http: httpdom.lst
-  domain: httpdom.lst
-  https: httpsdomm.lst
-  domainmask: httpsdomm.lst
-  ip: ipsub.lst
-  ipsub: ipsub.lst
+  http:
+    - out/http.lst
+  domain:
+    - out/httpdom.lst
+  https:
+    - out/httpsdomm.lst
+  domainmask:
+    - out/httpsdomm.lst
+  ip:
+    - out/ipsub.lst
+  ipsub:
+    - out/ipsub.lst
 
 Logging:
   logpath: ./rknget.log

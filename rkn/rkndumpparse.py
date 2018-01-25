@@ -19,6 +19,9 @@ def _punencodedom(urlstr):
     return urlstr.encode('idna').decode()
 
 
+def _getdomain(urlstr):
+    return urllib.parse.urlparse(urlstr).netloc.split(':')[0]
+
 # More goddamn hardcode to the Hardcode God!
 def _urlHandler(urlstr):
     """
@@ -74,11 +77,13 @@ def parse(dumpfile):
             for url in content.iter('url'):
                 if url is not None:
                     if str(url.text).find('https') < 0:
+                        # Blocking only single URL
                         outdata['http'].add(
                             _urlHandler(url.text))
                     else:
+                        # Blocking all domain
                         outdata['https'].add(
-                            _urlHandler(url.text))
+                            _punencodedom(_getdomain(url.text)))
         elif content.attrib['blockType'] == 'domain':
             dom = content.find('domain')
             if dom is not None:
