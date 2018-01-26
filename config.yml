@@ -31,3 +31,7 @@ Logging:
   logpath: ./rknget.log
   stdoutlvl: DEBUG
   logfilelvl: INFO
+
+Debug:
+  useTempDump: True
+  useTempData: True
