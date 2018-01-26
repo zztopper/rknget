@@ -16,12 +16,12 @@ DumpLoader:
 DataMapping:
   http:
     - out/http.lst
-  domain:
-    - out/httpdom.lst
   https:
-    - out/httpsdomm.lst
+    - out/https.lst
+  domain:
+    - out/domain.lst
   domainmask:
-    - out/httpsdomm.lst
+    - out/domain.lst
   ip:
     - out/ipsub.lst
   ipsub:

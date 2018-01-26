@@ -52,7 +52,28 @@ def _urlHandler(urlstr):
     # querEncoded = urllib.parse.quote(string=parsedUrl.query,  safe='~@#$&()*!+=:;,.?/\%\\')
     # fragEncoded = urllib.parse.quote(string=parsedUrl.fragment,  safe='~@#$&()*!+=:;,.?/\%\\')
 
-    return '*' + punedomain + port + ''.join(list(urlmap)) + '*'
+    return punedomain + port + ''.join(list(urlmap))
+
+
+def _asterize(s):
+    """
+    Adds asterisk (*) to the start and to the end of the string,
+    but not repeating the sign.
+    Special cases:
+    '' -> ''
+    :param string: str
+    :return: string complemented by asterisks
+    """
+    if len(s) == 0:
+        return ''
+    if s[0] == '*':
+        if s[-1] == '*':
+            return s
+        else:
+            return s + '*'
+    elif s[-1] == '*':
+        return '*' + s
+    return '*' + s + '*'
 
 
 def parse(dumpfile):
@@ -79,11 +100,14 @@ def parse(dumpfile):
                     if str(url.text).find('https') < 0:
                         # Blocking only single URL
                         outdata['http'].add(
-                            _urlHandler(url.text))
+                            _asterize(
+                                _urlHandler(url.text)))
                     else:
                         # Blocking all domain
                         outdata['https'].add(
-                            _punencodedom(_getdomain(url.text)))
+                            _asterize(
+                                _punencodedom(
+                                    _getdomain(url.text))))
         elif content.attrib['blockType'] == 'domain':
             dom = content.find('domain')
             if dom is not None:
@@ -94,6 +118,9 @@ def parse(dumpfile):
             if dommsk is not None:
                 outdata['domainmask'].add(
                     _punencodedom(dommsk.text))
+                outdata['https'].add(
+                    _asterize(
+                        _punencodedom(dommsk.text)))
         elif content.attrib['blockType'] == 'ip':
             for iptag in content.iter('ip'):
                 outdata['ip'].add(iptag.text)
