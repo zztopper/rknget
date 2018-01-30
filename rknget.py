@@ -120,7 +120,7 @@ def main():
         logger.info('Last dump is actual')
         return 0
 
-    logger.info('Blocklist is outdated')
+    logger.info('Blocklist is outdated, requesting a new dump')
 
     try:
         dumpFile = rknSW.getDumpFile(open(config['Global']['reqPath'], 'rb').read(),

@@ -1,5 +1,5 @@
 *.lst
-*.log
+*.log*
 *__pycache__*
 .idea/
 out/

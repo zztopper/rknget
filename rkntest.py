@@ -29,7 +29,7 @@ def main():
 
     rknget.saveData(config['DataMapping'], outdata)
     logger.info('Parsed data have been saved')
-
+  
 
 if __name__ == "__main__":
     main()
