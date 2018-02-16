@@ -2,6 +2,7 @@ import zipfile
 import xml.etree.ElementTree
 import io
 import urllib.parse
+import re
 
 datatypes = (
     'http',
@@ -11,6 +12,7 @@ datatypes = (
     'ip',
     'ipsub'
 )
+__ipregex = re.compile('''\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}''')
 
 
 # IDNA encoding can fail for too long labels (>63 characters)
@@ -76,6 +78,32 @@ def _asterize(s):
     return '*' + s + '*'
 
 
+def _domainCorrect(s):
+    """
+    Corrects given domain.
+    :param s: str
+    :return: corrected domain
+    """
+    badchars = ('\\', '\'', '"')
+    for c in badchars:
+        if s.find(c) != -1:
+            s = ''.join(s.split(c))
+    return s
+
+
+def _isip(s):
+    return __ipregex.match(s) is not None
+
+
+def _isipsub(s):
+    try:
+        ip, sub = s.split('/')
+        if int(sub) <= 32 and _isip(ip):
+            return True
+    except:
+        return False
+
+
 def parse(dumpfile):
     """
     :param dumpfile: binary loaded file in ram
@@ -95,6 +123,7 @@ def parse(dumpfile):
         count += 1
         if not 'blockType' in content.attrib or \
                 content.attrib['blockType'] == 'default':
+            # Considered to be an url
             for url in content.iter('url'):
                 if url is not None:
                     if str(url.text).find('https') < 0:
@@ -112,19 +141,24 @@ def parse(dumpfile):
             dom = content.find('domain')
             if dom is not None:
                 outdata['domain'].add(
-                    _punencodedom(dom.text))
+                    _punencodedom(
+                        _domainCorrect(dom.text)))
         elif content.attrib['blockType'] == 'domain-mask':
             dommsk = content.find('domain')
             if dommsk is not None:
                 outdata['domainmask'].add(
-                    _punencodedom(dommsk.text))
+                    _punencodedom(
+                        _domainCorrect(dommsk.text)))
                 outdata['https'].add(
                     _asterize(
-                        _punencodedom(dommsk.text)))
+                        _punencodedom(
+                            _domainCorrect(dommsk.text))))
         elif content.attrib['blockType'] == 'ip':
             for iptag in content.iter('ip'):
-                outdata['ip'].add(iptag.text)
+                if _isip(iptag.text):
+                    outdata['ip'].add(iptag.text)
             for ipsubntag in content.iter('ipSubnet'):
-                outdata['ipsub'].add(ipsubntag.text)
+                if _isipsub(ipsubntag.text):
+                    outdata['ipsub'].add(ipsubntag.text)
 
     return outdata

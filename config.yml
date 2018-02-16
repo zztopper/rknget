@@ -34,4 +34,4 @@ Logging:
 
 Debug:
   useTempDump: True
-  useTempData: True
+  useTempData: False
