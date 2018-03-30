@@ -1,3 +1,7 @@
+"""
+DEPRECATED
+"""
+
 import zipfile
 import xml.etree.ElementTree
 import io

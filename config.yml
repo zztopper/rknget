@@ -11,8 +11,9 @@ DumpLoader:
   conntimeout: 240
   sleeptimeout: 60
   SoapVersion: 1.2
-  dumpfmtver: 2.2
+  dumpfmtver: 2.3
 
+# Deprecated
 DataMapping:
   http:
     - out/http.lst
@@ -26,6 +27,17 @@ DataMapping:
     - out/ipsub.lst
   ipsub:
     - out/ipsub.lst
+
+DB:
+  engine: postgresql
+  host: localhost
+  port: 5432
+  dbname: rkndb
+  user: rkn
+  password: hry
+
+Miscellaneous:
+  Synthetic: True
 
 Logging:
   logpath: ./rknget.log

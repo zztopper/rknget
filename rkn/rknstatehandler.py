@@ -9,6 +9,7 @@ stateschema = {'Dump':  {},
                'Parse': {}
                }
 
+
 class RknStateHandler:
 
     _stateFilename = 'state.yml'

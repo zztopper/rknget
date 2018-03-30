@@ -4,8 +4,7 @@ import sys
 import yaml
 import logging
 import os
-from rkn import rknstatehandler, rknsoapwrapper, rkndumpparse
-
+from rkn import rknstatehandler, rknsoapwrapper, dumpparse, synthetic
 
 CONFIG_PATH = 'config.yml'
 
@@ -14,7 +13,7 @@ CONFIG_PATH = 'config.yml'
 def initConf():
     """
     Parses argv, loades config.yml
-    :return: Configuration tree
+    :return: Configusration tree
     """
     # Yeah, I'm too laze to use argparse
     if len(sys.argv) == 1:
@@ -31,7 +30,7 @@ def initConf():
 # Initialising logger, returns logger
 def initLog(logpath='log.log', stdoutlvl='DEBUG', logfilelvl='INFO', **kwargs):
     logger = logging.getLogger()
-    logger.setLevel(logging.getLevelName(logfilelvl))
+    logger.setLevel(logging.getLevelName(stdoutlvl))
     formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
     filehandler = logging.FileHandler(logpath)
     filehandler.setLevel(logging.getLevelName(logfilelvl))
@@ -49,7 +48,7 @@ def createFolders(*args):
     """
     Creates nesessary folders
     :param args: paths tuple
-    :return: Nothing
+    :return: Nothingzzzя
     """
     for path in args:
         try:
@@ -58,29 +57,10 @@ def createFolders(*args):
             pass
 
 
-def saveData(datamapping, outdata):
-    """
-    Saves parsed datasets to files defined.
-    :param outpath: tuple of paths
-    :param datamapping: dict datatype -> filename
-    :param outdata: data dict datatype -> set
-    :return: None
-    """
-
-    # Cleansing files if any exists
-    for dfiles in datamapping.values():
-        for file in dfiles:
-            open(file, 'w').close()
-
-    for dtype in outdata.keys():
-        # You might not save some data
-        if datamapping.get(dtype) is None:
-            continue
-        # Or you might of course
-        for file in datamapping[dtype]:
-            f = open(file=file, mode='a+t', buffering=1)
-            f.write('\n'.join(outdata[dtype]) + '\n')
-            f.close()
+def buildConnStr(engine, host, port, dbname, user, password, **kwargs):
+    return engine + '://' + \
+           user + ':' + password + '@' + \
+           host + ':' + str(port) + '/' + dbname
 
 
 def main():
@@ -90,76 +70,62 @@ def main():
         return 0
 
     logger = initLog(**config['Logging'])
-
-    logger.debug('Successfully started with config:\n' + str(config))
-
+    logger.debug('Successfully started at with config:\n' + str(config))
     createFolders(config['Global']['tmppath'])
 
     # Loading state values from file
     if not os.path.exists(config['Global']['statepath']):
         logger.warning('State file is absent, but don\'t worry')
-
     lastRknState = rknstatehandler.RknStateHandler(config['Global']['statepath'])
 
-    logger.debug('Obtaining dumpfile from ' + config['DumpLoader']['url'])
+    # Obtaining dump file
+    # logger.debug('Obtaining dumpfile from ' + config['DumpLoader']['url'])
+    # try:
+    #     rknSW = rknsoapwrapper.RknSOAPWrapper(**config['DumpLoader'])
+    #
+    # except Exception as e:
+    #     logger.error('Couldn\'t connect to RKN WSDL\n' + str(e))
+    #
+    # dumpDate = rknSW.getLastDumpDateEx()
+    # if not dumpDate:
+    #     logger.error('Couldn\'t obtain dumpdates info')
+    #     return 1
+    # lastRknState.updateTimeStamps(dumpDate['lastDumpDate'],
+    #                               dumpDate['lastDumpDateUrgently'])
+    #
+    # if lastRknState.isActual():
+    #     logger.info('Last dump is actual')
+    #     return 0
+    # logger.info('Blocklist is outdated, requesting a new dump')
+    # try:
+    #     dumpFile = rknSW.getDumpFile(open(config['Global']['reqPath'], 'rb').read(),
+    #                                  open(config['Global']['reqPathSig'], 'rb').read()
+    #                                  )
+    # except Exception as e:
+    #     logger.error(e)
+    #     return 2
+    #
+    # if config['Global']['savetmp']:
+    #     open(file=config['Global']['tmppath']+'/dump.xml.zip', mode='wb').write(dumpFile)
+    dumpFile = open(file=config['Global']['tmppath']+'/dump.xml.zip', mode='rb').read()
+
+    connstr = buildConnStr(**config['DB'])
+    # Parsing dump file
     try:
-        rknSW = rknsoapwrapper.RknSOAPWrapper(**config['DumpLoader'])
-
-    except Exception as e:
-        logger.error('Couldn\'t connect to RKN WSDL\n' + str(e))
-
-    dumpDate = rknSW.getLastDumpDateEx()
-    if not dumpDate:
-        logger.error('Couldn\'t obtain dumpdates info')
-        return 1
-
-    lastRknState.updateTimeStamps(dumpDate['lastDumpDate'],
-                                  dumpDate['lastDumpDateUrgently'])
-
-    if lastRknState.isActual():
-        logger.info('Last dump is actual')
-        return 0
-
-    logger.info('Blocklist is outdated, requesting a new dump')
-
-    try:
-        dumpFile = rknSW.getDumpFile(open(config['Global']['reqPath'], 'rb').read(),
-                                     open(config['Global']['reqPathSig'], 'rb').read()
-                                     )
-    except Exception as e:
-        logger.error(e)
-        return 2
-
-    if config['Global']['savetmp']:
-        open(file=config['Global']['tmppath']+'/dump.xml.zip', mode='wb').write(dumpFile)
-
-    try:
-        outdata = rkndumpparse.parse(dumpFile)
+        # TODO: return something debugging
+        nodata = dumpparse.parse(dumpFile, connstr)
+        # Freeing memory
+        del dumpFile
+        #if config['Miscellaneous']['Synthetic']:
+        #    synthetic.something(connstr)
     except Exception as e:
         logger.error(e)
         lastRknState.updateParseInfo(None)
         return 3
+
     logger.info('Blocklist has been parsed successfully')
-
-    # Freeing memory
-    del dumpFile
-
-    saveData(config['DataMapping'], outdata)
-
-    if config['Global']['savetmp']:
-        tmpDataMapping = {dtype: [config['Global']['tmppath'] + '/' + dtype]
-                          for dtype in rkndumpparse.datatypes}
-        saveData(tmpDataMapping, outdata)
-        pass
-
-    logger.info('Parsed data have been saved')
-
-    # save debug data to the state file
-    datasetsizes = {dtype: len(outdata[dtype])
-                    for dtype in outdata.keys()}
-    datasetsizes['urlsCount'] = sum(datasetsizes.values())
-
-    lastRknState.updateParseInfo(datasetsizes)
+    # Saving Success to the state file
+    lastRknState.updateParseInfo({"Success": True})
     return 0
 
 

@@ -14,6 +14,8 @@ python3:
     xml
     zipfile
     yaml
+    psycopg2 
+    sqlalchemy
 
 Дисклеймер (Disclaimer)
 
