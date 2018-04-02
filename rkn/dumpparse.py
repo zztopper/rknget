@@ -99,18 +99,23 @@ def parse(dumpfile, connstr):
 
     """
     xmldump = zipfile.ZipFile(io.BytesIO(dumpfile)).read('dump.xml')
-
     xmlroot = xml.etree.ElementTree.XML(xmldump)
-
     dbhandler = DatabaseHandler(connstr)
+
+    if xmlroot is None:
+        raise RKNDumpFormatException("Parse error: no incorrect dump!")
 
     counter = 0
 
     # Getting IDs set
     outerIDSet = dbhandler.getOuterIDSet()
 
+    # Creating new dump info record
+    dump_id = dbhandler.addDumpInfoRecord(**xmlroot.attrib)
+
     # Filling tables
     for content in xmlroot.iter('content'):
+        # We needn't operate the data which is already in the DB.
         if int(content.attrib['id']) in outerIDSet:
             outerIDSet.remove(int(content.attrib['id']))
             continue
@@ -122,7 +127,7 @@ def parse(dumpfile, connstr):
         decision_id = dbhandler.addDecision(**des.attrib) #date, number, org
 
         # Importing content
-        content_id = dbhandler.addContent(decision_id, **content.attrib)
+        content_id = dbhandler.addContent(dump_id, decision_id, **content.attrib)
 
         # resourses parsing...
         for tag in ('url', 'domain', 'ip', 'ipSubnet'):
@@ -161,11 +166,13 @@ def parse(dumpfile, connstr):
         counter += 1
         if counter % 1000 == 0:
             print("Parsed: " + str(counter))
-            dbhandler._session.commit()
+            # dbhandler._session.commit()
 
     # There are content rows have been removed remain.
     if len(outerIDSet) > 0:
-        dbhandler.disableRemovedContent(outerIDSet)
+        dbhandler.updateContentPresence(dump_id, outerIDSet)
+    # Set dump entry parsed.
+    dbhandler.setDumpParsed(dump_id)
 
     dbhandler.commitclose()
 

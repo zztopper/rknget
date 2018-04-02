@@ -21,13 +21,12 @@ def main():
                 open(file=config['Global']['tmppath']+'/dump.xml.zip', mode='wb').write(dumpFile)
         else:
             dumpFile = open(config['Global']['tmppath']+'/dump.xml.zip', mode='rb').read()
-        outdata = rkndumpparse.parse(dumpFile)
+        outdata = dumpparse.parse(dumpFile)
         del dumpFile
     else:
         outdata = {dtype: open(config['Global']['tmppath'] + '/' + dtype).readlines()
-                   for dtype in rkndumpparse.datatypes}
+                   for dtype in dumpparse.datatypes}
 
-    rknget.saveData(config['DataMapping'], outdata)
     logger.info('Parsed data have been saved')
   
 

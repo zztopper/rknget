@@ -54,10 +54,14 @@ class Content(Base):
     decision_id = Column(Integer, ForeignKey('decision.id'), nullable=False)
     blocktype_id = Column(Integer, ForeignKey('blocktype.id'), nullable=False)
     entrytype_id = Column(Integer, nullable=False) # ForeignKey('entrytype.id') - not mandatory
+    first_dump_id = Column(Integer, ForeignKey('dumpinfo.id'), nullable=False)
+    last_dump_id = Column(Integer, ForeignKey('dumpinfo.id'), nullable=False)
 
 
-class ProcInfo(Base):
-    __tablename__ = 'procinfo'
-    content_id = Column(Integer, ForeignKey('content.id'), primary_key=True, nullable=False)
-    add_time = Column(DateTime, nullable=False)
-    del_time = Column(DateTime)
+class DumpInfo(Base):
+    __tablename__ = 'dumpinfo'
+    id = Column(Integer, Sequence('dumpinfo_id_seq'), primary_key=True)
+    update_time = Column(DateTime, nullable=False)
+    update_time_urgently = Column(DateTime)
+    parse_time = Column(DateTime, nullable=False)
+    parsed = Column(Boolean, default=False)

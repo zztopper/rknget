@@ -21,7 +21,7 @@ class DatabaseHandler:
         self._sessionmaker = sessionmaker(bind=self._engine)
         self._session = self._sessionmaker()
         self._InitTableDicts()
-        self._now = datetime.now()
+        self._now = datetime.utcnow()
 
     def commitclose(self):
         self._session.commit()
@@ -37,7 +37,6 @@ class DatabaseHandler:
             dbim[row.name] = row.id
         return dbim
 
-
     def _InitTableDicts(self):
         """
         Fetching dictionaries for future usage
@@ -46,19 +45,35 @@ class DatabaseHandler:
         self._entitytypeList = self._getNameIDMapping(Entitytype)
         self._orgList = self._getNameIDMapping(Organisation)
 
+    def addDumpInfoRecord(self, updateTime, updateTimeUrgently, **kwargs):
+        """
+        The arguments were named corresponding with
+        <reg> tag attributes to simplify kwargs passthrough
+        """
+        dump_info_record = DumpInfo(update_time=updateTime,
+                                    update_time_urgently=updateTimeUrgently,
+                                    parse_time=self._now,
+                                    parsed=False)
+        self._session.add(dump_info_record)
+        self._session.commit()
+        return dump_info_record.id
+
+    def setDumpParsed(self, dump_id):
+        dump_info_record = self._session.query(DumpInfo).filter_by(id=dump_id).first()
+        dump_info_record.parsed = True
+        self._session.commit()
+
     def addDecision(self, date, number, org):
         """
-        :param date
         The arguments were named corresponding with
-        <content> tag attributes to simplify kwargs passthrough
+        <decision> tag attributes to simplify kwargs passthrough
         """
-
-
         # Adding missing organisation to the table
         if self._orgList.get(org) is None:
             newOrg = Organisation(name=org)
             self._session.add(newOrg)
-            self._session.commit()
+            # Let it be committed, not so much orgs exist
+            self._session.flush()
             self._orgList[org] = newOrg.id
 
         # Insert or update is not supported by this ORM module
@@ -75,11 +90,12 @@ class DatabaseHandler:
         self._session.flush()
         return newDes.id
 
-    def _addProcInfo(self, content_id):
-        self._session.add(ProcInfo(content_id=content_id, add_time=self._now, del_time=None))
-
-    def addContent(self, decision_id, id, includeTime,
+    def addContent(self, dump_id, decision_id, id, includeTime,
                    hash, entryType, blocktype='default', ts=None, **kwargs):
+        """
+        The arguments were named corresponding with
+        <content> tag attributes to simplify kwargs passthrough
+        """
         # Let the KeyErrorException raise if an alien blocktype revealed
         blocktype_id = self._blocktypeList[blocktype]
 
@@ -98,19 +114,25 @@ class DatabaseHandler:
             in_dump=True,
             decision_id=decision_id,
             blocktype_id=blocktype_id,
-            entrytype_id=entryType
+            entrytype_id=entryType,
+            first_dump_id=dump_id,
+            last_dump_id=dump_id
         )
         self._session.add(newContent)
         self._session.flush()
-        self._addProcInfo(newContent.id)
         return newContent.id
 
     def getOuterIDSet(self):
+        # The set is faster because unsorted
         return {cnt.outer_id for cnt in self._session.query(Content.outer_id).filter_by(in_dump=True).all()}
 
-    def disableRemovedContent(self, outerinset):
-        self._session.query(Content).filter_by(Content.outer_id.in_(outerinset)).update({'in_dump': False})
-        self._session.query(ProcInfo).filter_by(ProcInfo.outer_id.in_(outerinset)).update({'del_date': self._now})
+    def updateContentPresence(self, dump_id, outerinset):
+        # The list is required to avoid *args passthrough
+        # filter_by shouldn't be used with in_ and notin_
+        self._session.query(Content).filter(Content.outer_id.in_(outerinset))\
+            .update({'in_dump': False}, synchronize_session=False)
+        self._session.query(Content).filter(Content.outer_id.notin_(outerinset))\
+            .update({'last_dump_id': dump_id}, synchronize_session=False)
         self._session.flush()
 
     def addResource(self, content_id, entitytype, value, synthetic=True, last_change=None):

@@ -78,36 +78,36 @@ def main():
         logger.warning('State file is absent, but don\'t worry')
     lastRknState = rknstatehandler.RknStateHandler(config['Global']['statepath'])
 
-    # Obtaining dump file
-    # logger.debug('Obtaining dumpfile from ' + config['DumpLoader']['url'])
-    # try:
-    #     rknSW = rknsoapwrapper.RknSOAPWrapper(**config['DumpLoader'])
-    #
-    # except Exception as e:
-    #     logger.error('Couldn\'t connect to RKN WSDL\n' + str(e))
-    #
-    # dumpDate = rknSW.getLastDumpDateEx()
-    # if not dumpDate:
-    #     logger.error('Couldn\'t obtain dumpdates info')
-    #     return 1
-    # lastRknState.updateTimeStamps(dumpDate['lastDumpDate'],
-    #                               dumpDate['lastDumpDateUrgently'])
-    #
-    # if lastRknState.isActual():
-    #     logger.info('Last dump is actual')
-    #     return 0
-    # logger.info('Blocklist is outdated, requesting a new dump')
-    # try:
-    #     dumpFile = rknSW.getDumpFile(open(config['Global']['reqPath'], 'rb').read(),
-    #                                  open(config['Global']['reqPathSig'], 'rb').read()
-    #                                  )
-    # except Exception as e:
-    #     logger.error(e)
-    #     return 2
-    #
-    # if config['Global']['savetmp']:
-    #     open(file=config['Global']['tmppath']+'/dump.xml.zip', mode='wb').write(dumpFile)
-    dumpFile = open(file=config['Global']['tmppath']+'/dump.xml.zip', mode='rb').read()
+    Obtaining dump file
+    logger.debug('Obtaining dumpfile from ' + config['DumpLoader']['url'])
+    try:
+        rknSW = rknsoapwrapper.RknSOAPWrapper(**config['DumpLoader'])
+    except Exception as e:
+        logger.error('Couldn\'t connect to RKN WSDL\n' + str(e))
+
+    dumpDate = rknSW.getLastDumpDateEx()
+    if not dumpDate:
+        logger.error('Couldn\'t obtain dumpdates info')
+        return 1
+    lastRknState.updateTimeStamps(dumpDate['lastDumpDate'],
+                                  dumpDate['lastDumpDateUrgently'])
+
+    if lastRknState.isActual():
+        logger.info('Last dump is relevant')
+        return 0
+    logger.info('Blocklist is outdated, requesting a new dump')
+    try:
+        dumpFile = rknSW.getDumpFile(open(config['Global']['reqPath'], 'rb').read(),
+                                     open(config['Global']['reqPathSig'], 'rb').read()
+                                     )
+    except Exception as e:
+        logger.error(e)
+        return 2
+
+    if config['Global']['savetmp']:
+        open(file=config['Global']['tmppath']+'/dump.xml.zip', mode='wb').write(dumpFile)
+    # If you do wanna use downloaded file, take this instead of 'Loading' block above
+    # dumpFile = open(file=config['Global']['tmppath']+'/dump.xml.zip', mode='rb').read()
 
     connstr = buildConnStr(**config['DB'])
     # Parsing dump file

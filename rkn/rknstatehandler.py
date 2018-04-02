@@ -56,7 +56,7 @@ class RknStateHandler:
         else:
             self.state['Parse']['Success'] = True
             self.state['Parse'].update(data)
-        self.state['Run']['parseTime'] = self._now()
+            self.state['Run']['parseTime'] = self._now()
         self._save()
 
     def _save(self):
