@@ -6,6 +6,9 @@ from rkn.db.scheme import *
 
 
 class DatabaseHandler:
+    """
+
+    """
 
     _engine = None
     _sessionmaker = None
@@ -20,7 +23,7 @@ class DatabaseHandler:
         self._engine = create_engine(connstr, echo=False)
         self._sessionmaker = sessionmaker(bind=self._engine)
         self._session = self._sessionmaker()
-        self._InitTableDicts()
+        self._initTableDicts()
         self._now = datetime.utcnow()
 
     def commitclose(self):
@@ -37,7 +40,7 @@ class DatabaseHandler:
             dbim[row.name] = row.id
         return dbim
 
-    def _InitTableDicts(self):
+    def _initTableDicts(self):
         """
         Fetching dictionaries for future usage
         """
