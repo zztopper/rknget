@@ -93,8 +93,7 @@ def parse(dumpfile, connstr):
                 dbhandler.addResource(content_id=content_id,
                                           last_change=element.attrib.get('ts'),
                                           entitytype=entitytype,
-                                          value=value,
-                                          synthetic=False)
+                                          value=value)
 
         counter += 1
         if counter % 1000 == 0:

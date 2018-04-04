@@ -3,6 +3,10 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 
 
+"""
+This ORM scheme is only operational, don't use it to create the same in database.
+"""
+
 Base = declarative_base()
 
 
@@ -37,10 +41,10 @@ class Resource(Base):
     id = Column(Integer, Sequence('resource_id_seq'), primary_key=True)
     content_id = Column(Integer, ForeignKey('content.id'), nullable=False)
     last_change = Column(DateTime)
-    entitytype_id = Column(Integer, nullable=False)
+    entitytype_id = Column(Integer, ForeignKey('entitytype.id'), nullable=False)
     value = Column(String, nullable=False) #May be not unique
-    synthetic = Column(Boolean, nullable=False)
-    pass
+    synthetic = Column(Boolean, default=False, nullable=False)
+    is_blocked = Column(Boolean)
 
 
 class Content(Base):

@@ -1,4 +1,4 @@
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, or_, and_
 from sqlalchemy.orm import sessionmaker
 from datetime import datetime
 
@@ -138,14 +138,63 @@ class DatabaseHandler:
             .update({'last_dump_id': dump_id}, synchronize_session=False)
         self._session.flush()
 
-    def addResource(self, content_id, entitytype, value, synthetic=True, last_change=None):
+    def addResource(self, content_id, entitytype, value, synthetic, last_change=None):
         # Let the KeyErrorException raise if an alien blocktype revealed
         entitytype_id = self._entitytypeList[entitytype]
 
         self._session.add(Resource(content_id=content_id,
                                    last_change=last_change,
                                    entitytype_id=entitytype_id,
-                                   value=value,
-                                   synthetic=synthetic))
+                                   value=value))
         self._session.flush()
+
+    def purgeResourceSynthetic(self):
+        self._session.query(Resource).filter_by(synthetic=True).delete(synchronize_session='evaluate')
+        self._session.commit()
+
+    def unblockAllResources(self):
+        self._session.query(Resource).update({'is_blocked': False}, synchronize_session='fetch')
+        self._session.flush()
+
+    #def getResourcesSet(self):
+    #    self._session.query(Resource)
+
+    def blockResources(self, method):
+        {'basic': self._blockBasicResources()}[method]
+
+    def _blockResourcesByIDs(self, idSet):
+        """
+        :param idSet: iterable
+        :return:
+        """
+        self._session.query(Resource).filter(Resource.id.in_(idSet)) \
+            .update({'is_blocked': True}, synchronize_session=False)
+
+    def _blockBasicResources(self):
+        """
+        Enables blocking resoures according to its blocktype and presence in the dump
+        """
+        # Understand as you consider
+        res_id_data = self._session.query(Resource.id). \
+            join(Content). \
+            join(BlockType). \
+            join(Entitytype). \
+            filter(Resource.content_id == Content.id). \
+            filter(Content.blocktype_id == BlockType.id). \
+            filter(Resource.entitytype_id == Entitytype.id). \
+            filter(
+                or_(
+                    and_(BlockType.name == 'default',
+                         or_(Entitytype.name == 'http', Entitytype.name == 'https')),
+                    and_(or_(BlockType.name == 'domain', BlockType.name == 'domain-mask'),
+                         Entitytype.name == 'domain'),
+                    and_(BlockType.name == 'ip',
+                         or_(Entitytype.name == 'ip', Entitytype.name == 'ipsubnet')),
+                )
+            ). \
+            filter(Content.in_dump is True)
+        ids = {res_id_data.id for res_id_data in res_id_data.all()}
+
+        self._blockResourcesByIDs(ids)
+
 

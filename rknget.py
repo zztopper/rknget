@@ -4,7 +4,7 @@ import sys
 import yaml
 import logging
 import os
-from rkn import rknstatehandler, rknsoapwrapper, dumpparse, synthetic
+from rkn import rknstatehandler, rknsoapwrapper, dumpparse, synthetic, blocking
 
 CONFIG_PATH = 'config.yml'
 
@@ -29,6 +29,7 @@ def initConf():
 
 # Initialising logger, returns logger
 def initLog(logpath='log.log', stdoutlvl='DEBUG', logfilelvl='INFO', **kwargs):
+
     logger = logging.getLogger()
     logger.setLevel(logging.getLevelName(stdoutlvl))
     formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -78,36 +79,36 @@ def main():
         logger.warning('State file is absent, but don\'t worry')
     lastRknState = rknstatehandler.RknStateHandler(config['Global']['statepath'])
 
-    Obtaining dump file
-    logger.debug('Obtaining dumpfile from ' + config['DumpLoader']['url'])
-    try:
-        rknSW = rknsoapwrapper.RknSOAPWrapper(**config['DumpLoader'])
-    except Exception as e:
-        logger.error('Couldn\'t connect to RKN WSDL\n' + str(e))
-
-    dumpDate = rknSW.getLastDumpDateEx()
-    if not dumpDate:
-        logger.error('Couldn\'t obtain dumpdates info')
-        return 1
-    lastRknState.updateTimeStamps(dumpDate['lastDumpDate'],
-                                  dumpDate['lastDumpDateUrgently'])
-
-    if lastRknState.isActual():
-        logger.info('Last dump is relevant')
-        return 0
-    logger.info('Blocklist is outdated, requesting a new dump')
-    try:
-        dumpFile = rknSW.getDumpFile(open(config['Global']['reqPath'], 'rb').read(),
-                                     open(config['Global']['reqPathSig'], 'rb').read()
-                                     )
-    except Exception as e:
-        logger.error(e)
-        return 2
-
-    if config['Global']['savetmp']:
-        open(file=config['Global']['tmppath']+'/dump.xml.zip', mode='wb').write(dumpFile)
+    # Obtaining dump file
+    # logger.debug('Obtaining dumpfile from ' + config['DumpLoader']['url'])
+    # try:
+    #     rknSW = rknsoapwrapper.RknSOAPWrapper(**config['DumpLoader'])
+    # except Exception as e:
+    #     logger.error('Couldn\'t connect to RKN WSDL\n' + str(e))
+    #
+    # dumpDate = rknSW.getLastDumpDateEx()
+    # if not dumpDate:
+    #     logger.error('Couldn\'t obtain dumpdates info')
+    #     return 1
+    # lastRknState.updateTimeStamps(dumpDate['lastDumpDate'],
+    #                               dumpDate['lastDumpDateUrgently'])
+    #
+    # if lastRknState.isActual():
+    #     logger.info('Last dump is relevant')
+    #     return 0
+    # logger.info('Blocklist is outdated, requesting a new dump')
+    # try:
+    #     dumpFile = rknSW.getDumpFile(open(config['Global']['reqPath'], 'rb').read(),
+    #                                  open(config['Global']['reqPathSig'], 'rb').read()
+    #                                  )
+    # except Exception as e:
+    #     logger.error(e)
+    #     return 2
+    #
+    # if config['Global']['savetmp']:
+    #     open(file=config['Global']['tmppath']+'/dump.xml.zip', mode='wb').write(dumpFile)
     # If you do wanna use downloaded file, take this instead of 'Loading' block above
-    # dumpFile = open(file=config['Global']['tmppath']+'/dump.xml.zip', mode='rb').read()
+    dumpFile = open(file=config['Global']['tmppath']+'/dump.xml.zip', mode='rb').read()
 
     connstr = buildConnStr(**config['DB'])
     # Parsing dump file
@@ -116,14 +117,25 @@ def main():
         nodata = dumpparse.parse(dumpFile, connstr)
         # Freeing memory
         del dumpFile
-        #if config['Miscellaneous']['Synthetic']:
+        #if
         #    synthetic.something(connstr)
     except Exception as e:
         logger.error(e)
         lastRknState.updateParseInfo(None)
         return 3
 
-    logger.info('Blocklist has been parsed successfully')
+    logger.info('Dump have been parsed to database successfully')
+
+    # Synthetic
+    if config['Miscellaneous']['Synthetic']:
+        synthetic.updateSynthetic(connstr)
+        logger.info('Synthetic restrictions have been generated')
+    else:
+        synthetic.purgeSynthetic(connstr)
+        logger.warning('There are no synthetic restrictions from now')
+
+    # Blocking
+    blocking.blockResources(connstr, **config['Blocking'])
     # Saving Success to the state file
     lastRknState.updateParseInfo({"Success": True})
     return 0

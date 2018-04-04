@@ -36,8 +36,13 @@ DB:
   user: rkn
   password: hry
 
+Blocking:
+  basic: True
+  dns: True
+
+
 Miscellaneous:
-  Synthetic: True
+  Synthetic: False
 
 Logging:
   logpath: ./rknget.log
