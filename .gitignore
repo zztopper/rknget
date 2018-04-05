@@ -2,8 +2,8 @@
 *.log*
 *__pycache__*
 .idea/
-out/
-tmp/
+*out/
+*tmp/
 request.xml
 request.xml.sig
 state.yml

@@ -9,22 +9,34 @@ from rkn import rknstatehandler, rknsoapwrapper, dumpparse, synthetic, blocking
 CONFIG_PATH = 'config.yml'
 
 
-# Importing configuration
-def initConf():
+# Parsing arguments
+def confpath_argv():
     """
     Parses argv, loades config.yml
-    :return: Configusration tree
+    :return: config path
     """
-    # Yeah, I'm too laze to use argparse
     if len(sys.argv) == 1:
-        return yaml.load(open(CONFIG_PATH))
+        return CONFIG_PATH
 
     if len(sys.argv) == 3 and sys.argv[2] == '-c':
-        return yaml.load(open(sys.argv[3]))
+        return sys.argv[3]
 
+    return None
+
+
+# Print help
+def print_help():
     print('Usage: ' + sys.argv[0] + ' (with ./config.yml)\n' +
           'Usage: ' + sys.argv[0] + ' -c [CONFIG PATH]')
-    exit(0)
+
+
+# Importing configuration
+def initConf(configpath):
+    """
+    Loades YAML config
+    :return: Configuration tree
+    """
+    return yaml.load(open(configpath))
 
 
 # Initialising logger, returns logger
@@ -65,10 +77,12 @@ def buildConnStr(engine, host, port, dbname, user, password, **kwargs):
 
 
 def main():
-    config = initConf()
-    if config is None:
-        print('Usage: ')
+    configPath = confpath_argv()
+    if configPath is None:
+        print_help()
         return 0
+
+    config = initConf(configPath)
 
     logger = initLog(**config['Logging'])
     logger.debug('Successfully started at with config:\n' + str(config))
@@ -80,36 +94,36 @@ def main():
     lastRknState = rknstatehandler.RknStateHandler(config['Global']['statepath'])
 
     # Obtaining dump file
-    # logger.debug('Obtaining dumpfile from ' + config['DumpLoader']['url'])
-    # try:
-    #     rknSW = rknsoapwrapper.RknSOAPWrapper(**config['DumpLoader'])
-    # except Exception as e:
-    #     logger.error('Couldn\'t connect to RKN WSDL\n' + str(e))
-    #
-    # dumpDate = rknSW.getLastDumpDateEx()
-    # if not dumpDate:
-    #     logger.error('Couldn\'t obtain dumpdates info')
-    #     return 1
-    # lastRknState.updateTimeStamps(dumpDate['lastDumpDate'],
-    #                               dumpDate['lastDumpDateUrgently'])
-    #
-    # if lastRknState.isActual():
-    #     logger.info('Last dump is relevant')
-    #     return 0
-    # logger.info('Blocklist is outdated, requesting a new dump')
-    # try:
-    #     dumpFile = rknSW.getDumpFile(open(config['Global']['reqPath'], 'rb').read(),
-    #                                  open(config['Global']['reqPathSig'], 'rb').read()
-    #                                  )
-    # except Exception as e:
-    #     logger.error(e)
-    #     return 2
-    #
-    # if config['Global']['savetmp']:
-    #     open(file=config['Global']['tmppath']+'/dump.xml.zip', mode='wb').write(dumpFile)
+    logger.debug('Obtaining dumpfile from ' + config['DumpLoader']['url'])
+    try:
+        rknSW = rknsoapwrapper.RknSOAPWrapper(**config['DumpLoader'])
+    except Exception as e:
+        logger.error('Couldn\'t connect to RKN WSDL\n' + str(e))
+
+    dumpDate = rknSW.getLastDumpDateEx()
+    if not dumpDate:
+        logger.error('Couldn\'t obtain dumpdates info')
+        return 1
+    lastRknState.updateTimeStamps(dumpDate['lastDumpDate'],
+                                  dumpDate['lastDumpDateUrgently'])
+
+    if lastRknState.isActual():
+        logger.info('Last dump is relevant')
+        return 0
+    logger.info('Blocklist is outdated, requesting a new dump')
+    try:
+        dumpFile = rknSW.getDumpFile(open(config['Global']['reqPath'], 'rb').read(),
+                                     open(config['Global']['reqPathSig'], 'rb').read()
+                                     )
+    except Exception as e:
+        logger.error(e)
+        return 2
+
+    if config['Global']['savetmp']:
+        open(file=config['Global']['tmppath']+'/dump.xml.zip', mode='wb').write(dumpFile)
 
     # If you do wanna use downloaded file, take this instead of 'Loading' block above
-    dumpFile = open(file=config['Global']['tmppath']+'/dump.xml.zip', mode='rb').read()
+    # dumpFile = open(file=config['Global']['tmppath']+'/dump.xml.zip', mode='rb').read()
 
     connstr = buildConnStr(**config['DB'])
     # Parsing dump file
@@ -138,6 +152,7 @@ def main():
     blocking.blockResources(connstr, **config['Blocking'])
     # Saving Success to the state file
     lastRknState.updateParseInfo({"Success": True})
+    logger.info('Blocking was finished, enjoy your 1984')
     return 0
 
 
