@@ -3,7 +3,7 @@ import xml.etree.ElementTree
 import io
 
 import rkn.util
-from rkn.db.dataproc import DatabaseHandler
+from rkn.db.dataprocessing import DataProcessor
 
 
 class RKNDumpFormatException(BaseException):
@@ -33,7 +33,7 @@ def parse(dumpfile, connstr):
     """
     xmldump = zipfile.ZipFile(io.BytesIO(dumpfile)).read('dump.xml')
     xmlroot = xml.etree.ElementTree.XML(xmldump)
-    dbhandler = DatabaseHandler(connstr)
+    dataproc = DataProcessor(connstr)
 
     if xmlroot is None:
         raise RKNDumpFormatException("Parse error: no incorrect dump!")
@@ -41,10 +41,10 @@ def parse(dumpfile, connstr):
     counter = 0
 
     # Getting IDs set
-    outerIDSet = dbhandler.getOuterIDSet()
+    outerIDSet = dataproc.getOuterIDSet()
 
     # Creating new dump info record
-    dump_id = dbhandler.addDumpInfoRecord(**xmlroot.attrib)
+    dump_id = dataproc.addDumpInfoRecord(**xmlroot.attrib)
 
     # Filling tables
     for content in xmlroot.iter('content'):
@@ -57,10 +57,10 @@ def parse(dumpfile, connstr):
         des = content.find('decision')
         if des is None:
             raise RKNDumpFormatException("Parse error: no Decision for content id: "+content.attrib['id'])
-        decision_id = dbhandler.addDecision(**des.attrib) #date, number, org
+        decision_id = dataproc.addDecision(**des.attrib) #date, number, org
 
         # Importing content
-        content_id = dbhandler.addContent(dump_id, decision_id, **content.attrib)
+        content_id = dataproc.addContent(dump_id, decision_id, **content.attrib)
 
         # resourses parsing...
         for tag in ('url', 'domain', 'ip', 'ipSubnet'):
@@ -72,13 +72,17 @@ def parse(dumpfile, connstr):
                         entitytype = 'https'
                     value = rkn.util.urlHandler(element.text)
                 elif tag == 'domain':
-                    if str(element.text).find('.*') == 0:
+                    # Why wouldn't be used content.attrib['blockType'] instead?
+                    # Because domain tags don't depend on content blocktype.
+                    if str(element.text).find('*.') == 0:
                         entitytype = 'domain-mask'
-                        # Truncating .*
-                        value = rkn.util.punencodedom(_domainCorrect(element.text)[2:])
+                        # Truncating *.
+                        value = rkn.util.punencodedom(
+                            rkn.util.domainCorrect(element.text)[2:])
                     else:
                         entitytype = 'domain'
-                        value = rkn.util.punencodedom(_domainCorrect(element.text))
+                        value = rkn.util.punencodedom(
+                            rkn.util.domainCorrect(element.text))
                 elif tag == 'ip':
                     if not rkn.util.isip(element.text):
                         continue
@@ -90,23 +94,23 @@ def parse(dumpfile, connstr):
                     entitytype = 'ipsubnet'
                     value = element.text
 
-                dbhandler.addResource(content_id=content_id,
+                dataproc.addResource(content_id=content_id,
                                           last_change=element.attrib.get('ts'),
                                           entitytype=entitytype,
                                           value=value)
 
         counter += 1
-        if counter % 1000 == 0:
+        if counter % 100 == 0:
             print("Parsed: " + str(counter))
-            # dbhandler._session.commit()
+            # dataproc._session.commit()
 
     # There are content rows have been removed remain.
-    if len(outerIDSet) > 0:
-        dbhandler.updateContentPresence(dump_id, outerIDSet)
-    # Set dump entry parsed.
-    dbhandler.setDumpParsed(dump_id)
 
-    dbhandler.commitclose()
+    dataproc.updateContentPresence(dump_id, outerIDSet)
+    # Set dump entry parsed.
+    dataproc.setDumpParsed(dump_id)
+
+    dataproc.commitclose()
 
     # if not 'blockType' in content.attrib or \
     #         content.attrib['blockType'] == 'default':

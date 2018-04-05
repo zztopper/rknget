@@ -1,34 +1,21 @@
-from sqlalchemy import create_engine, or_, and_
-from sqlalchemy.orm import sessionmaker
-from datetime import datetime
+from sqlalchemy import or_, and_
 
+from rkn.db.dbhandler import DatabaseHandler
 from rkn.db.scheme import *
 
 
-class DatabaseHandler:
+class DataProcessor(DatabaseHandler):
     """
-
+    Successor class, which provides data processing functions
     """
-
-    _engine = None
-    _sessionmaker = None
-    _session = None
-    _now = None
 
     _orgList = dict()
     _blocktypeList = dict()
     _entitytypeList = dict()
 
     def __init__(self, connstr):
-        self._engine = create_engine(connstr, echo=False)
-        self._sessionmaker = sessionmaker(bind=self._engine)
-        self._session = self._sessionmaker()
+        super(DataProcessor, self).__init__(connstr)
         self._initTableDicts()
-        self._now = datetime.utcnow()
-
-    def commitclose(self):
-        self._session.commit()
-        self._session.close()
 
     def _getNameIDMapping(self, table):
         """
@@ -94,13 +81,13 @@ class DatabaseHandler:
         return newDes.id
 
     def addContent(self, dump_id, decision_id, id, includeTime,
-                   hash, entryType, blocktype='default', ts=None, **kwargs):
+                   hash, entryType, blockType='default', ts=None, **kwargs):
         """
         The arguments were named corresponding with
         <content> tag attributes to simplify kwargs passthrough
         """
         # Let the KeyErrorException raise if an alien blocktype revealed
-        blocktype_id = self._blocktypeList[blocktype]
+        blocktype_id = self._blocktypeList[blockType]
 
         # Checking whether content is in the table but disabled
         cnt = self._session.query(Content).filter_by(outer_id=id).first()
@@ -129,72 +116,24 @@ class DatabaseHandler:
         # The set is faster because unsorted
         return {cnt.outer_id for cnt in self._session.query(Content.outer_id).filter_by(in_dump=True).all()}
 
-    def updateContentPresence(self, dump_id, outerinset):
+    def updateContentPresence(self, dump_id, disabledIDSet):
         # The list is required to avoid *args passthrough
         # filter_by shouldn't be used with in_ and notin_
-        self._session.query(Content).filter(Content.outer_id.in_(outerinset))\
-            .update({'in_dump': False}, synchronize_session=False)
-        self._session.query(Content).filter(Content.outer_id.notin_(outerinset))\
+        if len(disabledIDSet) > 0:
+            self._session.query(Content).filter(Content.outer_id.in_(disabledIDSet))\
+                .update({'in_dump': False}, synchronize_session=False)
+        self._session.query(Content).filter(Content.in_dump == True)\
             .update({'last_dump_id': dump_id}, synchronize_session=False)
         self._session.flush()
 
-    def addResource(self, content_id, entitytype, value, synthetic, last_change=None):
+    def addResource(self, content_id, entitytype, value, synthetic=False, last_change=None):
         # Let the KeyErrorException raise if an alien blocktype revealed
         entitytype_id = self._entitytypeList[entitytype]
 
         self._session.add(Resource(content_id=content_id,
                                    last_change=last_change,
                                    entitytype_id=entitytype_id,
-                                   value=value))
+                                   value=value,
+                                   synthetic=synthetic))
         self._session.flush()
-
-    def purgeResourceSynthetic(self):
-        self._session.query(Resource).filter_by(synthetic=True).delete(synchronize_session='evaluate')
-        self._session.commit()
-
-    def unblockAllResources(self):
-        self._session.query(Resource).update({'is_blocked': False}, synchronize_session='fetch')
-        self._session.flush()
-
-    #def getResourcesSet(self):
-    #    self._session.query(Resource)
-
-    def blockResources(self, method):
-        {'basic': self._blockBasicResources()}[method]
-
-    def _blockResourcesByIDs(self, idSet):
-        """
-        :param idSet: iterable
-        :return:
-        """
-        self._session.query(Resource).filter(Resource.id.in_(idSet)) \
-            .update({'is_blocked': True}, synchronize_session=False)
-
-    def _blockBasicResources(self):
-        """
-        Enables blocking resoures according to its blocktype and presence in the dump
-        """
-        # Understand as you consider
-        res_id_data = self._session.query(Resource.id). \
-            join(Content). \
-            join(BlockType). \
-            join(Entitytype). \
-            filter(Resource.content_id == Content.id). \
-            filter(Content.blocktype_id == BlockType.id). \
-            filter(Resource.entitytype_id == Entitytype.id). \
-            filter(
-                or_(
-                    and_(BlockType.name == 'default',
-                         or_(Entitytype.name == 'http', Entitytype.name == 'https')),
-                    and_(or_(BlockType.name == 'domain', BlockType.name == 'domain-mask'),
-                         Entitytype.name == 'domain'),
-                    and_(BlockType.name == 'ip',
-                         or_(Entitytype.name == 'ip', Entitytype.name == 'ipsubnet')),
-                )
-            ). \
-            filter(Content.in_dump is True)
-        ids = {res_id_data.id for res_id_data in res_id_data.all()}
-
-        self._blockResourcesByIDs(ids)
-
 

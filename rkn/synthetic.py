@@ -5,21 +5,16 @@ import logging
 
 import rkn.util
 
-from rkn.db.dataproc import DatabaseHandler
+from rkn.db.datasynthesis import DataSynthesizer
 
 """
 This module contains custom dataminers from existing info having been already parsed.
 """
 
-def _addDomainsFromHTTPS(dbhandler):
-    """
-    :param dbhandler: DB Handler class object
-    :return:
-    """
-    resSet = dbhandler.getResourcesSet()
 
 def purgeSynthetic(connstr):
-    DatabaseHandler(connstr).purgeResourceSynthetic()
+    DataSynthesizer(connstr).purgeResourceSynthetic()
+
 
 def updateSynthetic(connstr, methods):
     """
@@ -33,7 +28,7 @@ def updateSynthetic(connstr, methods):
     # logger = logging.getLogger()
     # for f in methods:
     #     try:
-    #         ("_"+str(f))(DatabaseHandler(connstr))
+    #         ("_"+str(f))(DataSynthesizer(connstr))
     #     except NotImplementedError e:
     #         logger.warning('Not implemented synthesis: ' + str(f))
 

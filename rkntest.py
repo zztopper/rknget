@@ -2,7 +2,7 @@
 
 
 import rknget
-from rkn import rknstatehandler, rknsoapwrapper, rkndumpparse
+from rkn import rknstatehandler, rknsoapwrapper, dumpparse
 
 
 
@@ -21,11 +21,11 @@ def main():
                 open(file=config['Global']['tmppath']+'/dump.xml.zip', mode='wb').write(dumpFile)
         else:
             dumpFile = open(config['Global']['tmppath']+'/dump.xml.zip', mode='rb').read()
-        outdata = dumpparse.parse(dumpFile)
+            connstr = rknget.buildConnStr(**config['DB'])
+        outdata = dumpparse.parse(dumpFile, connstr)
         del dumpFile
     else:
-        outdata = {dtype: open(config['Global']['tmppath'] + '/' + dtype).readlines()
-                   for dtype in dumpparse.datatypes}
+        pass
 
     logger.info('Parsed data have been saved')
   

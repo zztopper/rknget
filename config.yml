@@ -38,7 +38,9 @@ DB:
 
 Blocking:
   basic: True
-  dns: True
+  dnsfromhttps: True
+  ipfromhttps: True
+  ipfromdnsmask: True
 
 
 Miscellaneous:
