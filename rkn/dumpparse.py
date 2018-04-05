@@ -63,6 +63,7 @@ def parse(dumpfile, connstr):
         content_id = dataproc.addContent(dump_id, decision_id, **content.attrib)
 
         # resourses parsing...
+        # walking through the available tags
         for tag in ('url', 'domain', 'ip', 'ipSubnet'):
             for element in content.iter(tag):
                 if tag == 'url':

@@ -1,4 +1,5 @@
 from sqlalchemy import or_, and_
+from datetime import datetime
 
 from rkn.db.dbhandler import DatabaseHandler
 from rkn.db.scheme import *
@@ -9,6 +10,7 @@ class DataProcessor(DatabaseHandler):
     Successor class, which provides data processing functions
     """
 
+    _now = None
     _orgList = dict()
     _blocktypeList = dict()
     _entitytypeList = dict()
@@ -16,6 +18,7 @@ class DataProcessor(DatabaseHandler):
     def __init__(self, connstr):
         super(DataProcessor, self).__init__(connstr)
         self._initTableDicts()
+        self._now = datetime.utcnow()
 
     def _getNameIDMapping(self, table):
         """
