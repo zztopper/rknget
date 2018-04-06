@@ -1,5 +1,6 @@
 import urllib.parse
 import re
+import ipaddress
 
 
 def punencodedom(urlstr):
@@ -55,6 +56,23 @@ def domainCorrect(s):
     return s
 
 
+# Surely python-way, but 5 times slower
+# def isip(s):
+#     try:
+#         ipaddress.ip_address(s)
+#         return True
+#     except ValueError:
+#         return False
+#
+#
+# def isipsub(s):
+#     try:
+#         ipaddress.ip_network(s)
+#         return True
+#     except ValueError:
+#         return False
+
+
 __ipregex = re.compile('''\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}''')
 
 
@@ -69,3 +87,10 @@ def isipsub(s):
             return True
     except:
         return False
+
+
+def getSubnetIPs(s):
+    try:
+        return ipaddress.ip_network(s).hosts()
+    except ValueError:
+        return None

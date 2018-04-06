@@ -10,33 +10,26 @@ class BlockData(DatabaseHandler):
     """
 
     def __init__(self, connstr):
-        super(ResourceBlocker, self).__init__(connstr)
+        super(BlockData, self).__init__(connstr)
 
-    def getBlockedResourcesQuery(self, entitytype):
+    def _getBlockedResourcesQuery(self, entitytype):
         """
         :param entitytype: resource entitytype
         :return: query
         """
         return self._session.query(Resource.value). \
+            distinct(Resource.value). \
             join(Entitytype, Resource.entitytype_id == Entitytype.id). \
             filter(Entitytype.name == entitytype). \
             filter(Resource.is_blocked == True)
-
 
     def getBlockedResourcesSet(self, entitytype):
         """
         :param entitytype: resource entitytype
         :return: resources' values set
         """
-        try:
-            return {'ip': self._getBlockedIPSet}\
-                [entitytype]()
-        except KeyError:
-            return None
+        query = self._getBlockedResourcesQuery(entitytype)
 
-    def _getBlockedIPSet(self):
-        query = getBlockedResourcesQuery('ip')
+        resSet = {resrow.value for resrow in query.all()}
 
-        ipSet = {resrow.value for resrow in query.all()}
-
-        return ipSet
+        return resSet
