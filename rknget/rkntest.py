@@ -5,7 +5,7 @@ import rknget
 from rkn import rknstatehandler, rknsoapwrapper, dumpparse
 
 
-
+# Testing
 def main():
     config = rknget.initConf()
     logger = rknget.initLog(config['Logging']['logpath'], 'DEBUG', 'DEBUG')
