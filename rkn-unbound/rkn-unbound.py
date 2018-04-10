@@ -5,6 +5,7 @@ import yaml
 import logging
 import os
 import subprocess
+import datetime
 
 from rkn import restrictions
 
@@ -78,16 +79,20 @@ def buildConnStr(engine, host, port, dbname, user, password, **kwargs):
            host + ':' + str(port) + '/' + dbname
 
 
-def saveState(dom_dum, statepath):
+def updateStateYML(statepath, **kwargs):
     """
-    Simple writer
+    Considered to merge dicts
     :param statepath: the path to a file
-    :param dom_dum: blocked domains count, 0 after failure
+    :param kwargs: any state parameters you want
     """
-    open(statepath, 'w').write(str(dom_dum))
+    file = open(file=statepath, mode='w+')
+    try:
+        yaml.dump({**yaml.load(file),**kwargs}, file, default_flow_style=False)
+    except TypeError:
+        yaml.dump(kwargs, file, default_flow_style=False)
 
 
-def getUnboundLocalDomainsSet(binarypath, stubip, **kwargs):
+def getUnboundLocalDomains(binarypath, stubip, **kwargs):
     """
     Gets domains set from unbound local zones data
     :param binarypath: path to unbound-control
@@ -95,26 +100,73 @@ def getUnboundLocalDomainsSet(binarypath, stubip, **kwargs):
     :return: domains set
     """
     proc = subprocess.Popen(args=[binarypath, 'list_local_data'],
+                            encoding='UTF8',
                             stdout=subprocess.PIPE)
     # Filtered RKN domains
     domains = set()
     for stdoutrow in proc.communicate()[0].split('\n'):
         rowdata = stdoutrow.split('\t')
-        if rowdata[4] == stubip:
+        if len(rowdata) == 5 and rowdata[4] == stubip:
             domains.add(rowdata[0][:-1])
     #
     proc = subprocess.Popen(args=[binarypath, 'list_local_zones'],
+                            encoding='UTF8',
                             stdout=subprocess.PIPE)
 
     wdomains = set()
     for stdoutrow in proc.communicate()[0].split('\n'):
         rowdata = stdoutrow.split(' ')
-        if rowdata[1] == 'redirect':
+        if len(rowdata) == 2 and rowdata[1] == 'redirect':
+            try:
+                domains.remove(rowdata[0][:-1])
+            except KeyError:
+                continue
             wdomains.add(rowdata[0][:-1])
-            domains.remove(rowdata[0][:-1])
+
 
     return domains, wdomains
 
+
+def addUnboundZones(binarypath, stubip, domainset, zonetype, **kwargs):
+    """
+    Adds domains stubs via unbound-control
+    :param binarypath: path to unbound-control
+    :param domainset: domains set
+    :param zonetype: 'static', 'redirect', 'transparent', etc. See unbound.conf manuals.
+    :return: blocked domains count
+    """
+
+    for domain in domainset:
+        subprocess.call([binarypath, 'local_zone', domain, zonetype])
+        subprocess.call([binarypath, 'local_data', domain + '. IN A ' + stubip])
+    return len(domainset)
+
+
+def delUnboundZones(binarypath, domainset, **kwargs):
+    """
+    Deletes domains stubs via unbound-control
+    :param binarypath: path to unbound-control
+    :param domainset: domains set
+    :return: blocked domains count
+    """
+
+    for domain in domainset:
+        subprocess.call([binarypath, 'local_zone_remove', domain])
+    return len(domainset)
+
+
+def genUnboundConfig(confpath, stubip, domainset, wdomainset, **kwargs):
+    configfile = open(file=confpath, mode='w')
+
+    for domain in domainset:
+        configfile.write('local-zone: "' + domain + '" static\n')
+        configfile.write('local-data: "' + domain + '. IN A 10.1.1.3"\n\n')
+
+    for wdomain in wdomainset:
+        configfile.write('local-zone: "' + wdomain + '" redirect\n')
+        configfile.write('local-data: "' + wdomain + '. IN A 10.1.1.3"\n\n')
+
+    configfile.close()
 
 def main():
     configPath = confpath_argv()
@@ -127,28 +179,68 @@ def main():
     logger = initLog(**config['Logging'])
     logger.debug('Successfully started at with config:\n' + str(config))
     createFolders(config['Global']['tmppath'])
+    updateStateYML(statepath=config['Global']['statepath'],
+                   **{'Program': {'start_time': str(datetime.datetime.utcnow())}})
+
+    logger.info('Obtaining current domain blocklists on unbound daemon')
+    domainUBCSet, wdomainUBCSet = getUnboundLocalDomains(**config['Unbound'])
 
     connstr = buildConnStr(**config['DB'])
     # Parsing dump file
+    logger.info('Fetching restrictions list from DB')
     try:
         domainBlockSet, wdomainBlockSet = restrictions.getBlockedDomainsCleared(connstr)
+        updateStateYML(statepath=config['Global']['statepath'],
+                       **{'DB':
+                            {'domains': len(domainBlockSet),
+                             'wdomains': len(wdomainBlockSet),
+                             'last_successfull': True
+                             }
+                        })
     except Exception as e:
         logger.error(e)
-        saveState(0, config['Global']['statepath'])
+        updateStateYML(statepath=config['Global']['statepath'],
+                       **{'DB': {'last_successfull': False}})
         return 1
 
-    domainUBCSet, wdomainUBCSet = getUnboundLocalDomainsSet(**config['Unbound'])
+    try:
+        logger.info('Banning...')
+        addDcount = addUnboundZones(**config['Unbound'],
+                        domainset=domainBlockSet.difference(domainUBCSet),
+                        zonetype='static')
+        addWDcount = addUnboundZones(**config['Unbound'],
+                        domainset=wdomainBlockSet.difference(wdomainUBCSet),
+                        zonetype='redirect')
+        logger.info('Unbanning...')
+        delDcount = delUnboundZones(**config['Unbound'],
+                        domainset=domainUBCSet.difference(domainBlockSet))
+        delWDcount = delUnboundZones(**config['Unbound'],
+                        domainset=wdomainUBCSet.difference(wdomainBlockSet))
+        updateStateYML(statepath=config['Global']['statepath'],
+                       **{'Unbound':
+                              {'added': addDcount,
+                               'added_wildcard': addWDcount,
+                               'deleted': delDcount,
+                               'deleted_wildcard': delWDcount,
+                               'last_successfull': True
+                               }
+                          })
+    except Exception as e:
+        logger.critical('Something was going wrong, the violations may occur!')
+        logger.error(e)
+        updateStateYML(statepath=config['Global']['statepath'],
+                       **{'DB': {'last_successfull': False}})
+        return 2
 
+    logger.info('Generating permanent config...')
+    genUnboundConfig(**config['Unbound'],
+                     domainset=domainBlockSet,
+                     wdomainset=wdomainBlockSet
+                     )
 
-
-    # TODO: unbound-control, savefile
-    #domainSet
-    #config['Global']['savetmp']:
-
-    # TODO: sum dom + dommask? distinct?
-    saveState(len(domainSet), config['Global']['statepath'])
-
-    logger.info('Blocking was finished, enjoy your 1984')
+    logger.info('Blocking was finished, enjoy your 1984th')
+    updateStateYML(statepath=config['Global']['statepath'],
+                   **{'Program': {'finish_time': str(datetime.datetime.utcnow())}})
     return 0
 
 

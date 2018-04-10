@@ -152,7 +152,7 @@ def main():
     blocking.blockResources(connstr, **config['Blocking'])
     # Saving Success to the state file
     lastRknState.updateParseInfo({"Success": True})
-    logger.info('Blocking was finished, enjoy your 1984')
+    logger.info('Blocking was finished, enjoy your 1984th')
     return 0
 
 

@@ -77,7 +77,7 @@ __ipregex = re.compile('''\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}''')
 
 
 def isip(s):
-    return __ipregex.match(s) is not None
+    return __ipregex.fullmatch(s) is not None
 
 
 def isipsub(s):
@@ -87,6 +87,13 @@ def isipsub(s):
             return True
     except:
         return False
+
+
+__domregex = re.compile('''^.+\..*[^.]$''')
+
+
+def isdomain(s):
+    return __domregex.fullmatch(s) is not None
 
 
 def getSubnetIPs(s):

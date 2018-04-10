@@ -1,5 +1,15 @@
 from rkn.db.blockdata import BlockData
 
+
+def __getBlockedDataSet(connstr, entityname):
+    """
+    Function for debug purposes
+    :param connstr: smth like "engine://user:pswd@host:port/dbname"
+    :return: entities set
+    """
+    return BlockData(connstr).getBlockedResourcesSet(entityname)
+
+
 def getBlockedIpSet(connstr):
     """
     :param connstr: smth like "engine://user:pswd@host:port/dbname"
@@ -19,6 +29,7 @@ def getBlockedSubnetSet(connstr):
 def getBlockedDomainsCleared(connstr):
     """
     We don't need to block domains if the same wildcard domain is blocked
+    We don't need to block 3-level wildcard if 2-level wildcard is blocked
     :param connstr: smth like "engine://user:pswd@host:port/dbname"
     :return: 2 sets: domains and wildcard domains
     """
@@ -26,18 +37,20 @@ def getBlockedDomainsCleared(connstr):
     domains = bldt.getBlockedResourcesSet('domain')
     wdomains = bldt.getBlockedResourcesSet('domain-mask')
 
-    # Dedupe wd
-    for wd in wdomains:
+    # Dedupe wdomains
+    wds = wdomains.copy()
+    for wd in wds:
         w = '.' + wd
-        for wdom in wdomains:
-            if wdom.find(w) != -1:
-                wdomains.pop(wdom)
+        for wdom in wds:
+            if w in wdom:
+                # Using discard to ignore redelete.
+                wdomains.discard(wdom)
 
-    # Dedupe domains with wd
-    for wd in wdomains:
-        w = '.' + wd
-        for dom in domains:
-            if dom.find(w) != -1:
-                wdomains.pop(dom)
+    # Dedupe domains with wdomains
+    wds = wdomains.copy()
+    for dom in domains.copy():
+        for wd in wds:
+            if wd in dom:
+                domains.discard(dom)
 
     return domains, wdomains

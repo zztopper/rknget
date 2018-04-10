@@ -75,6 +75,8 @@ def parse(dumpfile, connstr):
                 elif tag == 'domain':
                     # Why wouldn't be used content.attrib['blockType'] instead?
                     # Because domain tags don't depend on content blocktype.
+                    if not rkn.util.isdomain(element.text):
+                        continue
                     if str(element.text).find('*.') == 0:
                         entitytype = 'domain-mask'
                         # Truncating *.

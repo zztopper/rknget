@@ -12,7 +12,7 @@ class BlockData(DatabaseHandler):
     def __init__(self, connstr):
         super(BlockData, self).__init__(connstr)
 
-    def _getBlockedResourcesQuery(self, entitytype):
+    def _getBlockedResourcesQuery(self, entityname):
         """
         :param entitytype: resource entitytype
         :return: query
@@ -20,15 +20,15 @@ class BlockData(DatabaseHandler):
         return self._session.query(Resource.value). \
             distinct(Resource.value). \
             join(Entitytype, Resource.entitytype_id == Entitytype.id). \
-            filter(Entitytype.name == entitytype). \
+            filter(Entitytype.name == entityname). \
             filter(Resource.is_blocked == True)
 
-    def getBlockedResourcesSet(self, entitytype):
+    def getBlockedResourcesSet(self, entityname):
         """
         :param entitytype: resource entitytype
         :return: resources' values set
         """
-        query = self._getBlockedResourcesQuery(entitytype)
+        query = self._getBlockedResourcesQuery(entityname)
 
         resSet = {resrow.value for resrow in query.all()}
 
