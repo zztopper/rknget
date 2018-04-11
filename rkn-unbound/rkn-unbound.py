@@ -140,10 +140,10 @@ def addUnboundZones(binarypath, stubip, domainset, zonetype, **kwargs):
     :param zonetype: 'static', 'redirect', 'transparent', etc. See unbound.conf manuals.
     :return: blocked domains count
     """
-
+    devnull=open(os.devnull, "w")
     for domain in domainset:
-        subprocess.call([binarypath, 'local_zone', domain, zonetype])
-        subprocess.call([binarypath, 'local_data', domain + '. IN A ' + stubip])
+        subprocess.call([binarypath, 'local_zone', domain, zonetype], stdout=devnull)
+        subprocess.call([binarypath, 'local_data', domain + '. IN A ' + stubip], stdout=devnull)
     return len(domainset)
 
 
@@ -154,9 +154,9 @@ def delUnboundZones(binarypath, domainset, **kwargs):
     :param domainset: domains set
     :return: blocked domains count
     """
-
+    devnull = open(os.devnull, "w")
     for domain in domainset:
-        subprocess.call([binarypath, 'local_zone_remove', domain])
+        subprocess.call([binarypath, 'local_zone_remove', domain],  stdout=devnull)
     return len(domainset)
 
 
@@ -184,6 +184,7 @@ def main():
 
     logger = initLog(**config['Logging'])
 
+    # TODO: PID implementation
     # Creating PID file
     # if os.path.isfile(config['Global']['pidpath']):
     #     logger.warning('The program is suspected to be running ' +
