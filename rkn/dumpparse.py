@@ -102,11 +102,6 @@ def parse(dumpfile, connstr):
                                           entitytype=entitytype,
                                           value=value)
 
-        counter += 1
-        if counter % 100 == 0:
-            print("Parsed: " + str(counter))
-            # dataproc._session.commit()
-
     # There are content rows have been removed remain.
 
     dataproc.updateContentPresence(dump_id, outerIDSet)

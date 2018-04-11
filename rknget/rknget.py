@@ -4,6 +4,8 @@ import sys
 import yaml
 import logging
 import os
+
+sys.path.append('../')
 from rkn import rknstatehandler, rknsoapwrapper, dumpparse, synthetic, blocking
 
 CONFIG_PATH = 'config.yml'

@@ -48,7 +48,7 @@ Miscellaneous:
 
 Logging:
   logpath: ./rknget.log
-  stdoutlvl: DEBUG
+  stdoutlvl: INFO
   logfilelvl: INFO
 
 Debug:

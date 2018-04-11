@@ -7,6 +7,7 @@ import os
 import subprocess
 import datetime
 
+sys.path.append('../')
 from rkn import restrictions
 
 CONFIG_PATH = 'config.yml'
@@ -85,11 +86,15 @@ def updateStateYML(statepath, **kwargs):
     :param statepath: the path to a file
     :param kwargs: any state parameters you want
     """
-    file = open(file=statepath, mode='w+')
     try:
-        yaml.dump({**yaml.load(file),**kwargs}, file, default_flow_style=False)
+        state = yaml.load(open(file=statepath, mode='r'))
+        yaml.dump({**state, **kwargs},
+                  open(file=statepath, mode='w'),
+                  default_flow_style=False)
     except TypeError:
-        yaml.dump(kwargs, file, default_flow_style=False)
+        yaml.dump(kwargs,
+                  open(file=statepath, mode='w'),
+                  default_flow_style=False)
 
 
 def getUnboundLocalDomains(binarypath, stubip, **kwargs):
@@ -168,6 +173,7 @@ def genUnboundConfig(confpath, stubip, domainset, wdomainset, **kwargs):
 
     configfile.close()
 
+
 def main():
     configPath = confpath_argv()
     if configPath is None:
@@ -245,4 +251,5 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    result = main()
+    exit(code=result)
