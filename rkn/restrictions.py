@@ -47,7 +47,7 @@ def getBlockedDomainsCleared(connstr):
                 wdomains.discard(wdom)
 
     # Dedupe domains with wdomains
-    wds = wdomains.copy()
+    wds = {'.'+w for w in wdomains}
     for dom in domains.copy():
         for wd in wds:
             if wd in dom:
