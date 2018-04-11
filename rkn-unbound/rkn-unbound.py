@@ -91,7 +91,7 @@ def updateStateYML(statepath, **kwargs):
         yaml.dump({**state, **kwargs},
                   open(file=statepath, mode='w'),
                   default_flow_style=False)
-    except TypeError:
+    except:
         yaml.dump(kwargs,
                   open(file=statepath, mode='w'),
                   default_flow_style=False)
