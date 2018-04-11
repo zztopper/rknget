@@ -148,7 +148,7 @@ def main():
         logger.info('Synthetic restrictions have been generated')
     else:
         synthetic.purgeSynthetic(connstr)
-        logger.warning('There are no synthetic restrictions from now')
+        logger.info('There are no synthetic restrictions from now')
 
     # Blocking
     blocking.blockResources(connstr, **config['Blocking'])

@@ -8,3 +8,4 @@ request.xml
 request.xml.sig
 state.yml
 *.conf
+*.pid

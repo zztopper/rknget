@@ -1,6 +1,7 @@
 Global:
   tmppath: ./tmp
   statepath: ./state.yml
+  pidpath: ./.pid
   savetmp: True
   reqPath: ./request.xml
   reqPathSig: ./request.xml.sig

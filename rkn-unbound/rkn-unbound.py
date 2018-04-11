@@ -183,6 +183,16 @@ def main():
     config = initConf(configPath)
 
     logger = initLog(**config['Logging'])
+
+    # Creating PID file
+    # if os.path.isfile(config['Global']['pidpath']):
+    #     logger.warning('The program is suspected to be running ' +
+    #                  'as long as the PID file ' + config['Global']['pidfile'] + ' exists.')
+    #     logger.info('Delete the PID file manually or wait until the first copy get finished')
+    #     return 0
+    # else:
+    #     open(config['Global']['pidpath'], 'w').close()
+
     logger.debug('Successfully started at with config:\n' + str(config))
     createFolders(config['Global']['tmppath'])
     updateStateYML(statepath=config['Global']['statepath'],
