@@ -13,21 +13,6 @@ DumpLoader:
   SoapVersion: 1.2
   dumpfmtver: 2.3
 
-# Deprecated
-DataMapping:
-  http:
-    - out/http.lst
-  https:
-    - out/https.lst
-  domain:
-    - out/domain.lst
-  domainmask:
-    - out/domain.lst
-  ip:
-    - out/ipsub.lst
-  ipsub:
-    - out/ipsub.lst
-
 DB:
   engine: postgresql
   host: localhost
