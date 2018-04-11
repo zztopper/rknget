@@ -1,7 +1,6 @@
 Global:
   tmppath: ./tmp
   statepath: ./state.yml
-  savetmp: True
 
 Unbound:
   binarypath: /usr/sbin/unbound-control
