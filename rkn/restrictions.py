@@ -49,7 +49,7 @@ def getBlockedDomainsCleared(connstr):
 
     # Dedupe domains with wdomains
     for wd in wdomains.copy():
-        regex = re.compile('''^.*''' + wd + '''$''')
+        regex = re.compile('''^(.*[^.]\.)?''' + wd + '''$''')
         for dom in domains.copy():
             if regex.fullmatch(dom):
                 # Using discard to ignore redelete.
