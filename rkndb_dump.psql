@@ -1,0 +1,765 @@
+--
+-- PostgreSQL database dump
+--
+
+SET statement_timeout = 0;
+SET lock_timeout = 0;
+SET idle_in_transaction_session_timeout = 0;
+SET client_encoding = 'UTF8';
+SET standard_conforming_strings = on;
+SELECT pg_catalog.set_config('search_path', '', false);
+SET check_function_bodies = false;
+SET client_min_messages = warning;
+SET row_security = off;
+
+--
+-- Name: plpgsql; Type: EXTENSION; Schema: -; Owner: 
+--
+
+CREATE EXTENSION IF NOT EXISTS plpgsql WITH SCHEMA pg_catalog;
+
+
+--
+-- Name: EXTENSION plpgsql; Type: COMMENT; Schema: -; Owner: 
+--
+
+COMMENT ON EXTENSION plpgsql IS 'PL/pgSQL procedural language';
+
+
+SET default_tablespace = '';
+
+SET default_with_oids = false;
+
+--
+-- Name: organisation; Type: TABLE; Schema: public; Owner: rkn
+--
+
+CREATE TABLE public.organisation (
+    id integer NOT NULL,
+    name text NOT NULL
+);
+
+
+ALTER TABLE public.organisation OWNER TO rkn;
+
+--
+-- Name: Organisation_id_seq; Type: SEQUENCE; Schema: public; Owner: rkn
+--
+
+CREATE SEQUENCE public."Organisation_id_seq"
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public."Organisation_id_seq" OWNER TO rkn;
+
+--
+-- Name: Organisation_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: rkn
+--
+
+ALTER SEQUENCE public."Organisation_id_seq" OWNED BY public.organisation.id;
+
+
+--
+-- Name: blocktype; Type: TABLE; Schema: public; Owner: rkn
+--
+
+CREATE TABLE public.blocktype (
+    id integer NOT NULL,
+    name text NOT NULL
+);
+
+
+ALTER TABLE public.blocktype OWNER TO rkn;
+
+--
+-- Name: blocktype_id_seq; Type: SEQUENCE; Schema: public; Owner: rkn
+--
+
+CREATE SEQUENCE public.blocktype_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.blocktype_id_seq OWNER TO rkn;
+
+--
+-- Name: blocktype_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: rkn
+--
+
+ALTER SEQUENCE public.blocktype_id_seq OWNED BY public.blocktype.id;
+
+
+--
+-- Name: content; Type: TABLE; Schema: public; Owner: rkn
+--
+
+CREATE TABLE public.content (
+    id integer NOT NULL,
+    outer_id integer,
+    include_time timestamp without time zone,
+    hash character(32),
+    last_change timestamp without time zone,
+    in_dump boolean,
+    decision_id integer NOT NULL,
+    blocktype_id integer NOT NULL,
+    entrytype_id integer NOT NULL,
+    first_dump_id integer NOT NULL,
+    last_dump_id integer NOT NULL
+);
+
+
+ALTER TABLE public.content OWNER TO rkn;
+
+--
+-- Name: content_id_seq; Type: SEQUENCE; Schema: public; Owner: rkn
+--
+
+CREATE SEQUENCE public.content_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.content_id_seq OWNER TO rkn;
+
+--
+-- Name: content_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: rkn
+--
+
+ALTER SEQUENCE public.content_id_seq OWNED BY public.content.id;
+
+
+--
+-- Name: decision; Type: TABLE; Schema: public; Owner: rkn
+--
+
+CREATE TABLE public.decision (
+    id integer NOT NULL,
+    decision_code text NOT NULL,
+    decision_date date NOT NULL,
+    org_id integer
+);
+
+
+ALTER TABLE public.decision OWNER TO rkn;
+
+--
+-- Name: decision_id_seq; Type: SEQUENCE; Schema: public; Owner: rkn
+--
+
+CREATE SEQUENCE public.decision_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.decision_id_seq OWNER TO rkn;
+
+--
+-- Name: decision_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: rkn
+--
+
+ALTER SEQUENCE public.decision_id_seq OWNED BY public.decision.id;
+
+
+--
+-- Name: dumpinfo; Type: TABLE; Schema: public; Owner: rkn
+--
+
+CREATE TABLE public.dumpinfo (
+    id integer NOT NULL,
+    update_time timestamp with time zone NOT NULL,
+    update_time_urgently timestamp with time zone,
+    parse_time timestamp with time zone NOT NULL,
+    parsed boolean DEFAULT false
+);
+
+
+ALTER TABLE public.dumpinfo OWNER TO rkn;
+
+--
+-- Name: dumpinfo_id_seq; Type: SEQUENCE; Schema: public; Owner: rkn
+--
+
+CREATE SEQUENCE public.dumpinfo_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.dumpinfo_id_seq OWNER TO rkn;
+
+--
+-- Name: dumpinfo_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: rkn
+--
+
+ALTER SEQUENCE public.dumpinfo_id_seq OWNED BY public.dumpinfo.id;
+
+
+--
+-- Name: entitytype; Type: TABLE; Schema: public; Owner: rkn
+--
+
+CREATE TABLE public.entitytype (
+    id integer NOT NULL,
+    name text NOT NULL
+);
+
+
+ALTER TABLE public.entitytype OWNER TO rkn;
+
+--
+-- Name: entitytype_id_seq; Type: SEQUENCE; Schema: public; Owner: rkn
+--
+
+CREATE SEQUENCE public.entitytype_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.entitytype_id_seq OWNER TO rkn;
+
+--
+-- Name: entitytype_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: rkn
+--
+
+ALTER SEQUENCE public.entitytype_id_seq OWNED BY public.entitytype.id;
+
+
+--
+-- Name: entrytype; Type: TABLE; Schema: public; Owner: rkn
+--
+
+CREATE TABLE public.entrytype (
+    id integer NOT NULL,
+    name character(64) NOT NULL
+);
+
+
+ALTER TABLE public.entrytype OWNER TO rkn;
+
+--
+-- Name: entry_id_seq; Type: SEQUENCE; Schema: public; Owner: rkn
+--
+
+CREATE SEQUENCE public.entry_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.entry_id_seq OWNER TO rkn;
+
+--
+-- Name: entry_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: rkn
+--
+
+ALTER SEQUENCE public.entry_id_seq OWNED BY public.entrytype.id;
+
+
+--
+-- Name: resource; Type: TABLE; Schema: public; Owner: rkn
+--
+
+CREATE TABLE public.resource (
+    id integer NOT NULL,
+    content_id integer NOT NULL,
+    last_change timestamp without time zone,
+    entitytype_id integer NOT NULL,
+    value text NOT NULL,
+    synthetic boolean DEFAULT false NOT NULL,
+    is_blocked boolean
+);
+
+
+ALTER TABLE public.resource OWNER TO rkn;
+
+--
+-- Name: resource_id_seq; Type: SEQUENCE; Schema: public; Owner: rkn
+--
+
+CREATE SEQUENCE public.resource_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.resource_id_seq OWNER TO rkn;
+
+--
+-- Name: resource_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: rkn
+--
+
+ALTER SEQUENCE public.resource_id_seq OWNED BY public.resource.id;
+
+
+--
+-- Name: blocktype id; Type: DEFAULT; Schema: public; Owner: rkn
+--
+
+ALTER TABLE ONLY public.blocktype ALTER COLUMN id SET DEFAULT nextval('public.blocktype_id_seq'::regclass);
+
+
+--
+-- Name: content id; Type: DEFAULT; Schema: public; Owner: rkn
+--
+
+ALTER TABLE ONLY public.content ALTER COLUMN id SET DEFAULT nextval('public.content_id_seq'::regclass);
+
+
+--
+-- Name: decision id; Type: DEFAULT; Schema: public; Owner: rkn
+--
+
+ALTER TABLE ONLY public.decision ALTER COLUMN id SET DEFAULT nextval('public.decision_id_seq'::regclass);
+
+
+--
+-- Name: dumpinfo id; Type: DEFAULT; Schema: public; Owner: rkn
+--
+
+ALTER TABLE ONLY public.dumpinfo ALTER COLUMN id SET DEFAULT nextval('public.dumpinfo_id_seq'::regclass);
+
+
+--
+-- Name: entitytype id; Type: DEFAULT; Schema: public; Owner: rkn
+--
+
+ALTER TABLE ONLY public.entitytype ALTER COLUMN id SET DEFAULT nextval('public.entitytype_id_seq'::regclass);
+
+
+--
+-- Name: entrytype id; Type: DEFAULT; Schema: public; Owner: rkn
+--
+
+ALTER TABLE ONLY public.entrytype ALTER COLUMN id SET DEFAULT nextval('public.entry_id_seq'::regclass);
+
+
+--
+-- Name: organisation id; Type: DEFAULT; Schema: public; Owner: rkn
+--
+
+ALTER TABLE ONLY public.organisation ALTER COLUMN id SET DEFAULT nextval('public."Organisation_id_seq"'::regclass);
+
+
+--
+-- Name: resource id; Type: DEFAULT; Schema: public; Owner: rkn
+--
+
+ALTER TABLE ONLY public.resource ALTER COLUMN id SET DEFAULT nextval('public.resource_id_seq'::regclass);
+
+
+--
+-- Data for Name: blocktype; Type: TABLE DATA; Schema: public; Owner: rkn
+--
+
+COPY public.blocktype (id, name) FROM stdin;
+1	default
+2	domain
+3	ip
+4	domain-mask
+\.
+
+
+--
+-- Data for Name: content; Type: TABLE DATA; Schema: public; Owner: rkn
+--
+
+COPY public.content (id, outer_id, include_time, hash, last_change, in_dump, decision_id, blocktype_id, entrytype_id, first_dump_id, last_dump_id) FROM stdin;
+\.
+
+
+--
+-- Data for Name: decision; Type: TABLE DATA; Schema: public; Owner: rkn
+--
+
+COPY public.decision (id, decision_code, decision_date, org_id) FROM stdin;
+\.
+
+
+--
+-- Data for Name: dumpinfo; Type: TABLE DATA; Schema: public; Owner: rkn
+--
+
+COPY public.dumpinfo (id, update_time, update_time_urgently, parse_time, parsed) FROM stdin;
+\.
+
+
+--
+-- Data for Name: entitytype; Type: TABLE DATA; Schema: public; Owner: rkn
+--
+
+COPY public.entitytype (id, name) FROM stdin;
+1	http
+2	https
+3	domain
+4	domain-mask
+5	ip
+6	ipsubnet
+\.
+
+
+--
+-- Data for Name: entrytype; Type: TABLE DATA; Schema: public; Owner: rkn
+--
+
+COPY public.entrytype (id, name) FROM stdin;
+1	реестр ЕАИС                                                     
+2	реестр НАП                                                      
+3	реестр 398-ФЗ                                                   
+4	реестр 97-ФЗ                                                    
+5	реестр НАП                                                      
+6	реестр нарушителей персданных                                   
+\.
+
+
+--
+-- Data for Name: organisation; Type: TABLE DATA; Schema: public; Owner: rkn
+--
+
+COPY public.organisation (id, name) FROM stdin;
+1	ФСКН
+13	Роскомнадзор
+14	Роспотребнадзор
+15	суд
+16	Генпрокуратура
+17	Мосгорсуд
+18	ФНС
+19	МВД
+20	Минкомсвязь
+\.
+
+
+--
+-- Data for Name: resource; Type: TABLE DATA; Schema: public; Owner: rkn
+--
+
+COPY public.resource (id, content_id, last_change, entitytype_id, value, synthetic, is_blocked) FROM stdin;
+\.
+
+
+--
+-- Name: Organisation_id_seq; Type: SEQUENCE SET; Schema: public; Owner: rkn
+--
+
+SELECT pg_catalog.setval('public."Organisation_id_seq"', 20, true);
+
+
+--
+-- Name: blocktype_id_seq; Type: SEQUENCE SET; Schema: public; Owner: rkn
+--
+
+SELECT pg_catalog.setval('public.blocktype_id_seq', 4, true);
+
+
+--
+-- Name: content_id_seq; Type: SEQUENCE SET; Schema: public; Owner: rkn
+--
+
+SELECT pg_catalog.setval('public.content_id_seq', 261830, true);
+
+
+--
+-- Name: decision_id_seq; Type: SEQUENCE SET; Schema: public; Owner: rkn
+--
+
+SELECT pg_catalog.setval('public.decision_id_seq', 51060, true);
+
+
+--
+-- Name: dumpinfo_id_seq; Type: SEQUENCE SET; Schema: public; Owner: rkn
+--
+
+SELECT pg_catalog.setval('public.dumpinfo_id_seq', 67, true);
+
+
+--
+-- Name: entitytype_id_seq; Type: SEQUENCE SET; Schema: public; Owner: rkn
+--
+
+SELECT pg_catalog.setval('public.entitytype_id_seq', 6, true);
+
+
+--
+-- Name: entry_id_seq; Type: SEQUENCE SET; Schema: public; Owner: rkn
+--
+
+SELECT pg_catalog.setval('public.entry_id_seq', 6, true);
+
+
+--
+-- Name: resource_id_seq; Type: SEQUENCE SET; Schema: public; Owner: rkn
+--
+
+SELECT pg_catalog.setval('public.resource_id_seq', 915030, true);
+
+
+--
+-- Name: blocktype blocktype_id_key; Type: CONSTRAINT; Schema: public; Owner: rkn
+--
+
+ALTER TABLE ONLY public.blocktype
+    ADD CONSTRAINT blocktype_id_key PRIMARY KEY (id);
+
+
+--
+-- Name: blocktype blocktype_name_uniq; Type: CONSTRAINT; Schema: public; Owner: rkn
+--
+
+ALTER TABLE ONLY public.blocktype
+    ADD CONSTRAINT blocktype_name_uniq UNIQUE (name);
+
+
+--
+-- Name: content content_id_key; Type: CONSTRAINT; Schema: public; Owner: rkn
+--
+
+ALTER TABLE ONLY public.content
+    ADD CONSTRAINT content_id_key PRIMARY KEY (id);
+
+
+--
+-- Name: content content_outer_id_uniq; Type: CONSTRAINT; Schema: public; Owner: rkn
+--
+
+ALTER TABLE ONLY public.content
+    ADD CONSTRAINT content_outer_id_uniq UNIQUE (outer_id);
+
+
+--
+-- Name: decision decision_code_uniq; Type: CONSTRAINT; Schema: public; Owner: rkn
+--
+
+ALTER TABLE ONLY public.decision
+    ADD CONSTRAINT decision_code_uniq UNIQUE (decision_code);
+
+
+--
+-- Name: decision decision_id_key; Type: CONSTRAINT; Schema: public; Owner: rkn
+--
+
+ALTER TABLE ONLY public.decision
+    ADD CONSTRAINT decision_id_key PRIMARY KEY (id);
+
+
+--
+-- Name: dumpinfo dumpinfo_id_key; Type: CONSTRAINT; Schema: public; Owner: rkn
+--
+
+ALTER TABLE ONLY public.dumpinfo
+    ADD CONSTRAINT dumpinfo_id_key PRIMARY KEY (id);
+
+
+--
+-- Name: entitytype entitytype_id_key; Type: CONSTRAINT; Schema: public; Owner: rkn
+--
+
+ALTER TABLE ONLY public.entitytype
+    ADD CONSTRAINT entitytype_id_key PRIMARY KEY (id);
+
+
+--
+-- Name: entitytype entitytype_name_uniq; Type: CONSTRAINT; Schema: public; Owner: rkn
+--
+
+ALTER TABLE ONLY public.entitytype
+    ADD CONSTRAINT entitytype_name_uniq UNIQUE (name);
+
+
+--
+-- Name: entrytype entry_id_key; Type: CONSTRAINT; Schema: public; Owner: rkn
+--
+
+ALTER TABLE ONLY public.entrytype
+    ADD CONSTRAINT entry_id_key PRIMARY KEY (id);
+
+
+--
+-- Name: organisation org_id_key; Type: CONSTRAINT; Schema: public; Owner: rkn
+--
+
+ALTER TABLE ONLY public.organisation
+    ADD CONSTRAINT org_id_key PRIMARY KEY (id);
+
+
+--
+-- Name: organisation org_name_uniq; Type: CONSTRAINT; Schema: public; Owner: rkn
+--
+
+ALTER TABLE ONLY public.organisation
+    ADD CONSTRAINT org_name_uniq UNIQUE (name);
+
+
+--
+-- Name: resource resourse_id_key; Type: CONSTRAINT; Schema: public; Owner: rkn
+--
+
+ALTER TABLE ONLY public.resource
+    ADD CONSTRAINT resourse_id_key PRIMARY KEY (id);
+
+
+--
+-- Name: blocktype_id_index; Type: INDEX; Schema: public; Owner: rkn
+--
+
+CREATE INDEX blocktype_id_index ON public.blocktype USING btree (id);
+
+
+--
+-- Name: content_blocktype_id_index; Type: INDEX; Schema: public; Owner: rkn
+--
+
+CREATE INDEX content_blocktype_id_index ON public.content USING btree (blocktype_id);
+
+
+--
+-- Name: content_id_index; Type: INDEX; Schema: public; Owner: rkn
+--
+
+CREATE INDEX content_id_index ON public.content USING btree (id);
+
+
+--
+-- Name: content_outer_id_index; Type: INDEX; Schema: public; Owner: rkn
+--
+
+CREATE INDEX content_outer_id_index ON public.content USING btree (outer_id);
+
+
+--
+-- Name: decision_code_index; Type: INDEX; Schema: public; Owner: rkn
+--
+
+CREATE INDEX decision_code_index ON public.decision USING btree (decision_code);
+
+
+--
+-- Name: decision_id_index; Type: INDEX; Schema: public; Owner: rkn
+--
+
+CREATE INDEX decision_id_index ON public.decision USING btree (id);
+
+
+--
+-- Name: dumpinfo_id_index; Type: INDEX; Schema: public; Owner: rkn
+--
+
+CREATE INDEX dumpinfo_id_index ON public.dumpinfo USING btree (id);
+
+
+--
+-- Name: entitytype_id_index; Type: INDEX; Schema: public; Owner: rkn
+--
+
+CREATE INDEX entitytype_id_index ON public.entitytype USING btree (id);
+
+
+--
+-- Name: entrytype_id_index; Type: INDEX; Schema: public; Owner: rkn
+--
+
+CREATE INDEX entrytype_id_index ON public.entrytype USING btree (id);
+
+
+--
+-- Name: organisation_id_index; Type: INDEX; Schema: public; Owner: rkn
+--
+
+CREATE INDEX organisation_id_index ON public.organisation USING btree (id);
+
+
+--
+-- Name: resource_id_index; Type: INDEX; Schema: public; Owner: rkn
+--
+
+CREATE INDEX resource_id_index ON public.resource USING btree (id);
+
+
+--
+-- Name: content content_blocktype_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: rkn
+--
+
+ALTER TABLE ONLY public.content
+    ADD CONSTRAINT content_blocktype_id_foreign FOREIGN KEY (blocktype_id) REFERENCES public.blocktype(id);
+
+
+--
+-- Name: content content_decision_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: rkn
+--
+
+ALTER TABLE ONLY public.content
+    ADD CONSTRAINT content_decision_id_foreign FOREIGN KEY (decision_id) REFERENCES public.decision(id) ON UPDATE RESTRICT ON DELETE RESTRICT;
+
+
+--
+-- Name: content content_dumpinfo_first_dump_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: rkn
+--
+
+ALTER TABLE ONLY public.content
+    ADD CONSTRAINT content_dumpinfo_first_dump_id_foreign FOREIGN KEY (first_dump_id) REFERENCES public.dumpinfo(id) ON UPDATE CASCADE ON DELETE RESTRICT;
+
+
+--
+-- Name: content content_dumpinfo_last_dump_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: rkn
+--
+
+ALTER TABLE ONLY public.content
+    ADD CONSTRAINT content_dumpinfo_last_dump_id_foreign FOREIGN KEY (last_dump_id) REFERENCES public.dumpinfo(id) ON UPDATE CASCADE ON DELETE RESTRICT;
+
+
+--
+-- Name: decision decision_org_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: rkn
+--
+
+ALTER TABLE ONLY public.decision
+    ADD CONSTRAINT decision_org_id_foreign FOREIGN KEY (org_id) REFERENCES public.organisation(id);
+
+
+--
+-- Name: resource resourse_content_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: rkn
+--
+
+ALTER TABLE ONLY public.resource
+    ADD CONSTRAINT resourse_content_id_foreign FOREIGN KEY (content_id) REFERENCES public.content(id) ON UPDATE CASCADE ON DELETE CASCADE;
+
+
+--
+-- Name: resource resourse_entitytype_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: rkn
+--
+
+ALTER TABLE ONLY public.resource
+    ADD CONSTRAINT resourse_entitytype_id_foreign FOREIGN KEY (entitytype_id) REFERENCES public.entitytype(id) ON DELETE RESTRICT;
+
+
+--
+-- PostgreSQL database dump complete
+--
+
