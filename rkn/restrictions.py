@@ -1,4 +1,5 @@
 from rkn.db.blockdata import BlockData
+import re
 
 
 def __getBlockedDataSet(connstr, entityname):
@@ -40,17 +41,18 @@ def getBlockedDomainsCleared(connstr):
     # Dedupe wdomains
     wds = wdomains.copy()
     for wd in wds:
-        w = '.' + wd
+        regex = re.compile('''^.+\.''' + wd + '''$''')
         for wdom in wds:
-            if w in wdom:
+            if regex.fullmatch(wdom):
                 # Using discard to ignore redelete.
                 wdomains.discard(wdom)
 
     # Dedupe domains with wdomains
-    wds = {'.'+w for w in wdomains}
-    for dom in domains.copy():
-        for wd in wds:
-            if wd in dom:
+    for wd in wdomains.copy():
+        regex = re.compile('''^.*''' + wd + '''$''')
+        for dom in domains.copy():
+            if regex.fullmatch(dom):
+                # Using discard to ignore redelete.
                 domains.discard(dom)
 
     return domains, wdomains

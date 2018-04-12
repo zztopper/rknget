@@ -67,17 +67,17 @@ def parse(dumpfile, connstr):
         for tag in ('url', 'domain', 'ip', 'ipSubnet'):
             for element in content.iter(tag):
                 if tag == 'url':
-                    if str(element.text).find('https') < 0:
-                        entitytype = 'http'
-                    else:
+                    if str(element.text).find('https') == 0:
                         entitytype = 'https'
+                    else:
+                        entitytype = 'http'
                     value = rkn.util.urlHandler(element.text)
                 elif tag == 'domain':
                     # Why wouldn't be used content.attrib['blockType'] instead?
                     # Because domain tags don't depend on content blocktype.
                     if not rkn.util.isdomain(element.text):
                         continue
-                    if str(element.text).find('*.') == 0:
+                    if '*.' in str(element.text):
                         entitytype = 'domain-mask'
                         # Truncating *.
                         value = rkn.util.punencodedom(

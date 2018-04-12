@@ -8,7 +8,7 @@ def punencodedom(urlstr):
 
 
 def getdomain(urlstr):
-    return urllib.parse.urlparse(urlstr).netloc.split(':')[0]
+    return urllib.parse.urlparse(urlstr).netloc.split(':')[0].lower()
 
 
 # More goddamn hardcode to the Hardcode God!
