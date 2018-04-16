@@ -5,7 +5,7 @@ import yaml
 import logging
 import os
 import subprocess
-import datetime
+from datetime import datetime
 
 sys.path.append('../')
 from rkn import restrictions
@@ -197,7 +197,7 @@ def main():
     logger.debug('Successfully started at with config:\n' + str(config))
     createFolders(config['Global']['tmppath'])
     updateStateYML(statepath=config['Global']['statepath'],
-                   **{'Program': {'start_time': str(datetime.datetime.utcnow())}})
+                   **{'Program': {'start_time': str(datetime.now().astimezone())}})
 
     logger.info('Obtaining current domain blocklists on unbound daemon')
     domainUBCSet, wdomainUBCSet = getUnboundLocalDomains(**config['Unbound'])
@@ -257,7 +257,7 @@ def main():
 
     logger.info('Blocking was finished, enjoy your 1984th')
     updateStateYML(statepath=config['Global']['statepath'],
-                   **{'Program': {'finish_time': str(datetime.datetime.utcnow())}})
+                   **{'Program': {'finish_time': str(datetime.now().astimezone())}})
     return 0
 
 

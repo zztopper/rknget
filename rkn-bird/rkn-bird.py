@@ -5,7 +5,7 @@ import yaml
 import logging
 import os
 import subprocess
-import datetime
+from datetime import datetime
 
 sys.path.append('../')
 from rkn import restrictions
@@ -118,7 +118,7 @@ def main():
     logger.debug('Successfully started at with config:\n' + str(config))
     createFolders(config['Global']['tmppath'])
     updateStateYML(statepath=config['Global']['statepath'],
-                   **{'Program': {'start_time': str(datetime.datetime.utcnow())}})
+                   **{'Program': {'start_time': str(datetime.now().astimezone())}})
 
     connstr = buildConnStr(**config['DB'])
 
@@ -144,11 +144,11 @@ def main():
     ips = {ip+'/32' for ip in ipSet}
     logger.info('Updating bird configuration and restarting daemon...')
     updateBirdConfig(**config['Bird'],
-                  ipsubset=ipsubSet.union(ips))
+                     ipsubset=ipsubSet.union(ips))
 
     logger.info('Blocking was finished, enjoy your 1984th')
     updateStateYML(statepath=config['Global']['statepath'],
-                   **{'Program': {'finish_time': str(datetime.datetime.utcnow())}})
+                   **{'Program': {'finish_time': str(datetime.now().astimezone())}})
     return 0
 
 

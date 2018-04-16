@@ -2,6 +2,7 @@ from rkn.db.blockdata import BlockData
 import re
 import ipaddress
 
+
 def __getBlockedDataSet(connstr, entityname):
     """
     Function for debug purposes
@@ -28,6 +29,7 @@ def getBlockedIPsMerged(connstr):
                 ips.discard(ip)
 
     return ips, ipsubs
+
 
 def getBlockedDomainsMerged(connstr):
     """
