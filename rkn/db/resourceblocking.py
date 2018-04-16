@@ -26,7 +26,7 @@ class ResourceBlocker(DatabaseHandler):
                     'dnsfromhttps': self._blockHTTPSdomains,
                     'ipfromhttps': self._blockHTTPSips,
                     'ipfromdnsmask': self._blockDommaskIPs,
-                    'ipfromdns': self._blockDomainIPs()}\
+                    'ipfromdns': self._blockDomainIPs}\
                 [method]()
         except KeyError:
             return None
