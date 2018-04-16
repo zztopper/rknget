@@ -11,22 +11,6 @@ def __getBlockedDataSet(connstr, entityname):
     return BlockData(connstr).getBlockedResourcesSet(entityname)
 
 
-def getBlockedIpSet(connstr):
-    """
-    :param connstr: smth like "engine://user:pswd@host:port/dbname"
-    :return: ip list
-    """
-    return BlockData(connstr).getBlockedResourcesSet('ip')
-
-
-def getBlockedSubnetSet(connstr):
-    """
-    :param connstr: smth like "engine://user:pswd@host:port/dbname"
-    :return: ip/sub list
-    """
-    return BlockData(connstr).getBlockedResourcesSet('ipsubnet')
-
-
 def getBlockedIPsMerged(connstr):
     """
     Merges IPs into IP subnets containing first ones.

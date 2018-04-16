@@ -125,8 +125,6 @@ def main():
     # Fetching ip restrictions
     logger.info('Fetching restrictions list from DB')
     try:
-        # ipSet = restrictions.getBlockedIpSet(connstr)
-        # ipsubSet = restrictions.getBlockedSubnetSet(connstr)
         ipSet, ipsubSet = restrictions.getBlockedIPsMerged(connstr)
 
         updateStateYML(statepath=config['Global']['statepath'],
