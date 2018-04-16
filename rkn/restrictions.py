@@ -1,6 +1,6 @@
 from rkn.db.blockdata import BlockData
 import re
-
+import ipaddress
 
 def __getBlockedDataSet(connstr, entityname):
     """

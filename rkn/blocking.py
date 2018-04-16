@@ -22,7 +22,7 @@ def blockResources(connstr, **kwargs):
             if rows is not None:
                 logger.info('Blocked ' + str(rows) + ' rows with ' + str(mode) + ' blocking method')
             else:
-                logger.warning('Not implemented synthesis: ' + str(mode))
+                logger.warning('Not implemented blocking: ' + str(mode))
 
     resblocker.commitclose()
 

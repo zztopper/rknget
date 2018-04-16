@@ -27,6 +27,7 @@ Blocking:
   dnsfromhttps: True
   ipfromhttps: True
   ipfromdnsmask: True
+  ipfromdns: True
 
 
 Miscellaneous:

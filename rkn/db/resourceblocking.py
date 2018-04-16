@@ -25,7 +25,8 @@ class ResourceBlocker(DatabaseHandler):
             return {'basic': self._blockBasicResources,
                     'dnsfromhttps': self._blockHTTPSdomains,
                     'ipfromhttps': self._blockHTTPSips,
-                    'ipfromdnsmask': self._blockDommaskIPs}\
+                    'ipfromdnsmask': self._blockDommaskIPs,
+                    'ipfromdns': self._blockDomainIPs()}\
                 [method]()
         except KeyError:
             return None
@@ -106,3 +107,9 @@ class ResourceBlocker(DatabaseHandler):
         Enables IP blocking of domain-mask entities.
         """
         return self._blockRelated('domain-mask', 'ip')
+
+    def _blockDommaskIPs(self):
+        """
+        Enables IP blocking of domain-mask entities.
+        """
+        return self._blockRelated('domain', 'ip')
