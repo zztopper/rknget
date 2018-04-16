@@ -206,7 +206,7 @@ def main():
     # Parsing dump file
     logger.info('Fetching restrictions list from DB')
     try:
-        domainBlockSet, wdomainBlockSet = restrictions.getBlockedDomainsCleared(connstr)
+        domainBlockSet, wdomainBlockSet = restrictions.getBlockedDomainsMerged(connstr)
         updateStateYML(statepath=config['Global']['statepath'],
                        **{'DB':
                             {'domains': len(domainBlockSet),
