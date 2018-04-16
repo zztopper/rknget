@@ -108,7 +108,7 @@ class ResourceBlocker(DatabaseHandler):
         """
         return self._blockRelated('domain-mask', 'ip')
 
-    def _blockDommaskIPs(self):
+    def _blockDomainIPs(self):
         """
         Enables IP blocking of domain-mask entities.
         """
