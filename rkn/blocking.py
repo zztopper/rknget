@@ -3,10 +3,10 @@ import logging
 from rkn.db.resourceblocking import ResourceBlocker
 
 
-def blockResources(connstr, **kwargs):
+def blockResources(connstr, *args):
     """
     :param connstr: smth like "engine://user:pswd@host:port/dbname"
-    :param kwargs: blocking modes
+    :param args: blockings maps
     :return: maybe one day...
     """
     logger = logging.getLogger()
@@ -14,15 +14,18 @@ def blockResources(connstr, **kwargs):
     resblocker = ResourceBlocker(connstr)
     # It may slow down but is safe
     resblocker.unblockAllResources()
+    # Fairly blocking first
+    logger.debug('Blocking fairly (as is)')
+    rows = resblocker.blockFairly()
+    logger.info('Blocked fairly ' + str(rows) + ' rows')
 
-    for mode, enabled in kwargs.items():
-        if enabled:
-            logger.debug('Blocking mode processing: ' + str(mode))
-            rows = resblocker.blockResources(str(mode))
+    for src, dst in args:
+            logger.info('Blocking ' + str(dst) + ' from ' + str(src) + '...')
+            rows = resblocker.blockResources(src, dst)
             if rows is not None:
-                logger.info('Blocked ' + str(rows) + ' rows with ' + str(mode) + ' blocking method')
+                logger.info('Blocked ' + str(rows) + ' rows')
             else:
-                logger.warning('Not implemented blocking: ' + str(mode))
+                logger.warning('No such entity as ' + str(src) + ' or ' + str(dst))
 
     resblocker.commitclose()
 

@@ -23,12 +23,9 @@ DB:
   password: hry
 
 Blocking:
-  basic: True
-  dnsfromhttps: True
-  ipfromhttps: True
-  ipfromdnsmask: True
-  ipfromdns: True
-
+  - [https, domain]
+  - [https, ip]
+  - [domain-mask, ip]
 
 Miscellaneous:
   Synthetic: False

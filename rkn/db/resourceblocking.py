@@ -9,27 +9,44 @@ class ResourceBlocker(DatabaseHandler):
     Successor class, which provides resource blocking functions
     """
 
+    _entitytypeList = dict()
+
     def __init__(self, connstr):
         super(ResourceBlocker, self).__init__(connstr)
+        self._initTableDicts()
+
+    def _getNameIDMapping(self, table):
+        """
+        :param: table
+        :return: dict NAME -> ID
+        """
+        dbim = dict()
+        for row in self._session.query(table):
+            dbim[row.name] = row.id
+        return dbim
+
+    def _initTableDicts(self):
+        """
+        Fetching dictionaries for future usage
+        """
+        self._entitytypeList = self._getNameIDMapping(Entitytype)
+
 
     def unblockAllResources(self):
         self._session.query(Resource).update({'is_blocked': False}, synchronize_session=False)
         self._session.flush()
 
-    def blockResources(self, method):
+    def blockResources(self, src_entity, dst_entity):
         """
-        :param method: key to function in dict
+        Blocks dst_entities from src_entities data.
         :return: Blocked rows count if implemented, else None
         """
         try:
-            return {'basic': self._blockBasicResources,
-                    'dnsfromhttps': self._blockHTTPSdomains,
-                    'ipfromhttps': self._blockHTTPSips,
-                    'ipfromdnsmask': self._blockDommaskIPs,
-                    'ipfromdns': self._blockDomainIPs}\
-                [method]()
+            src_entity_id = self._entitytypeList[src_entity]
+            dst_entity_id = self._entitytypeList[dst_entity]
         except KeyError:
             return None
+        return self._blockRelated(src_entity_id, dst_entity_id)
 
     def _blockResourcesByIDs(self, idSet):
         """
@@ -38,7 +55,7 @@ class ResourceBlocker(DatabaseHandler):
         self._session.query(Resource).filter(Resource.id.in_(idSet)) \
             .update({'is_blocked': True}, synchronize_session=False)
 
-    def _blockBasicResources(self):
+    def blockFairly(self):
         """
         Enables blocking resoures according to its blocktype and presence in the dump
         Any other blocking is excessive a priori
@@ -63,7 +80,7 @@ class ResourceBlocker(DatabaseHandler):
         self._blockResourcesByIDs(ids)
         return len(ids)
 
-    def _blockRelated(self, src_entity, dst_entity):
+    def _blockRelated(self, src_entity_id, dst_entity_id):
         """
         Generic function without resource.value handlers
         Blocks entities related with a content entry.
@@ -74,8 +91,7 @@ class ResourceBlocker(DatabaseHandler):
         # Understand as you consider
         cnt_id_data = self._session.query(Resource.content_id). \
             join(Content, Resource.content_id == Content.id). \
-            join(Entitytype, Resource.entitytype_id == Entitytype.id). \
-            filter(Entitytype.name == src_entity). \
+            filter(Resource.entitytype_id == src_entity_id). \
             filter(Content.in_dump == True)
 
         cnt_ids = {cnt_id_data.content_id for cnt_id_data in cnt_id_data.all()}
@@ -83,33 +99,33 @@ class ResourceBlocker(DatabaseHandler):
         res_id_data = self._session.query(Resource.id). \
             join(Entitytype, Resource.entitytype_id == Entitytype.id). \
             filter(Resource.content_id.in_(cnt_ids)). \
-            filter(Entitytype.name == dst_entity)
+            filter(Resource.entitytype_id == dst_entity_id)
 
         ids = {resrow.id for resrow in res_id_data.all()}
 
         self._blockResourcesByIDs(ids)
         return len(ids)
 
-    def _blockHTTPSdomains(self):
-        """
-        Enables domain full blocking of https resources.
-        """
-        return self._blockRelated('https', 'domain')
-
-    def _blockHTTPSips(self):
-        """
-        Enables IP blocking of https entities.
-        """
-        return self._blockRelated('https', 'ip')
-
-    def _blockDommaskIPs(self):
-        """
-        Enables IP blocking of domain-mask entities.
-        """
-        return self._blockRelated('domain-mask', 'ip')
-
-    def _blockDomainIPs(self):
-        """
-        Enables IP blocking of domain-mask entities.
-        """
-        return self._blockRelated('domain', 'ip')
+    # def _blockHTTPSdomains(self):
+    #     """
+    #     Enables domain full blocking of https resources.
+    #     """
+    #     return self._blockRelated('https', 'domain')
+    #
+    # def _blockHTTPSips(self):
+    #     """
+    #     Enables IP blocking of https entities.
+    #     """
+    #     return self._blockRelated('https', 'ip')
+    #
+    # def _blockDommaskIPs(self):
+    #     """
+    #     Enables IP blocking of domain-mask entities.
+    #     """
+    #     return self._blockRelated('domain-mask', 'ip')
+    #
+    # def _blockDomainIPs(self):
+    #     """
+    #     Enables IP blocking of domain-mask entities.
+    #     """
+    #     return self._blockRelated('domain', 'ip')
