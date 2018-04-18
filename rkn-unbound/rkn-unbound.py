@@ -164,7 +164,7 @@ def genUnboundConfig(confpath, stubip, domainset, wdomainset, **kwargs):
     configfile = open(file=confpath, mode='w')
 
     for domain in domainset:
-        configfile.write('local-zone: "' + domain + '" static\n')
+        configfile.write('local-zone: "' + domain + '" transparent\n')
         configfile.write('local-data: "' + domain + '. IN A 10.1.1.3"\n\n')
 
     for wdomain in wdomainset:

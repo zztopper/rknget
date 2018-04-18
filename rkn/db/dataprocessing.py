@@ -112,9 +112,21 @@ class DataProcessor(DatabaseHandler):
         self._session.flush()
         return newContent.id
 
-    def getOuterIDSet(self):
+
+    def pruneContentResources(self, outer_id):
+        """
+        Deletes all content's resources
+        :param outer_id: from dump
+        :return: content_id
+        """
+        cnt = self._session.query(Content.id).filter_by(outer_id=outer_id).first()
+        self._session.query(Resource).filter_by(content_id=cnt.id).delete()
+        self._session.flush()
+        return cnt.id
+
+    def getOuterIDHashes(self):
         # The set is faster because unsorted
-        return {cnt.outer_id for cnt in self._session.query(Content.outer_id).filter_by(in_dump=True).all()}
+        return {cnt.outer_id: cnt.hash for cnt in self._session.query(Content.outer_id, Content.hash).filter_by(in_dump=True).all()}
 
     def updateContentPresence(self, dump_id, disabledIDSet):
         # The list is required to avoid *args passthrough

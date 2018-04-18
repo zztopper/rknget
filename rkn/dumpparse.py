@@ -40,27 +40,35 @@ def parse(dumpfile, connstr):
 
     counter = 0
 
-    # Getting IDs set
-    outerIDSet = dataproc.getOuterIDSet()
+    # Getting ID:Hash dict
+    outerHashes = dataproc.getOuterIDHashes()
 
     # Creating new dump info record
     dump_id = dataproc.addDumpInfoRecord(**xmlroot.attrib)
 
     # Filling tables
     for content in xmlroot.iter('content'):
-        # We needn't operate the data which is already in the DB.
-        if int(content.attrib['id']) in outerIDSet:
-            outerIDSet.remove(int(content.attrib['id']))
-            continue
-        # Else new content entry
-        # Importing decision
-        des = content.find('decision')
-        if des is None:
-            raise RKNDumpFormatException("Parse error: no Decision for content id: "+content.attrib['id'])
-        decision_id = dataproc.addDecision(**des.attrib) #date, number, org
+        dump_outer_id = int(content.attrib['id'])
+        dump_hash = content.attrib['hash']
+        # BTW, we don't consider hashes in dump to be null.
+        if outerHashes.get(dump_outer_id) is None:
+            # We've got new content entry. Importing decision
+            des = content.find('decision')
+            if des is None:
+                raise RKNDumpFormatException("Parse error: no Decision for content id: " + content.attrib['id'])
+            decision_id = dataproc.addDecision(**des.attrib)  # date, number, org
+            # Importing content
+            content_id = dataproc.addContent(dump_id, decision_id, **content.attrib)
 
-        # Importing content
-        content_id = dataproc.addContent(dump_id, decision_id, **content.attrib)
+        elif outerHashes.get(dump_outer_id) != dump_hash:
+            # Refilling content's resources
+            content_id = dataproc.pruneContentResources(dump_outer_id)
+            outerHashes.pop(dump_outer_id)
+
+        elif outerHashes.get(dump_outer_id) == dump_hash:
+            outerHashes.pop(dump_outer_id)
+            # Don't touch the entries not having been changed
+            continue
 
         # resourses parsing...
         # walking through the available tags
@@ -104,7 +112,7 @@ def parse(dumpfile, connstr):
 
     # There are content rows have been removed remain.
 
-    dataproc.updateContentPresence(dump_id, outerIDSet)
+    dataproc.updateContentPresence(dump_id, set(outerHashes.keys()))
     # Set dump entry parsed.
     dataproc.setDumpParsed(dump_id)
 

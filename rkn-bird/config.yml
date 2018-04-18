@@ -4,7 +4,7 @@ Global:
 
 Bird:
   restartcmd: service bird restart
-  confpath: ./rkn-bird.conf
+  confpath: ./bird-rkn.conf
   stubip: 1.1.1.1
 
 DB:
