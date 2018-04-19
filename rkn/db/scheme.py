@@ -42,8 +42,8 @@ class Resource(Base):
     content_id = Column(Integer, ForeignKey('content.id'), nullable=False)
     last_change = Column(DateTime)
     entitytype_id = Column(Integer, ForeignKey('entitytype.id'), nullable=False)
-    value = Column(String, nullable=False) #May be not unique
-    synthetic = Column(Boolean, default=False, nullable=False)
+    value = Column(String, nullable=False)  # May be not unique
+    is_custom = Column(Boolean, default=False, nullable=False)
     is_blocked = Column(Boolean)
 
 

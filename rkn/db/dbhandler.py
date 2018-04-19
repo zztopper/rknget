@@ -19,6 +19,13 @@ class DatabaseHandler:
         self._sessionmaker = sessionmaker(bind=self._engine)
         self._session = self._sessionmaker()
 
+    def __del__(self):
+        self.commitclose()
+        del self._now
+        del self._session
+        del self._sessionmaker
+        del self._engine
+
     def commitclose(self):
         self._session.commit()
         self._session.close()

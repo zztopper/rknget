@@ -6,7 +6,7 @@ import logging
 import os
 
 sys.path.append('../')
-from rkn import rknstatehandler, rknsoapwrapper, dumpparse, synthetic, blocking
+from rkn import rknstatehandler, rknsoapwrapper, dumpparse, blocking
 
 CONFIG_PATH = 'config.yml'
 
@@ -96,36 +96,36 @@ def main():
     lastRknState = rknstatehandler.RknStateHandler(config['Global']['statepath'])
 
     # Obtaining dump file
-    logger.debug('Obtaining dumpfile from ' + config['DumpLoader']['url'])
-    try:
-        rknSW = rknsoapwrapper.RknSOAPWrapper(**config['DumpLoader'])
-    except Exception as e:
-        logger.error('Couldn\'t connect to RKN WSDL\n' + str(e))
-
-    dumpDate = rknSW.getLastDumpDateEx()
-    if not dumpDate:
-        logger.error('Couldn\'t obtain dumpdates info')
-        return 1
-    lastRknState.updateTimeStamps(dumpDate['lastDumpDate'],
-                                  dumpDate['lastDumpDateUrgently'])
-
-    if lastRknState.isActual():
-        logger.info('Last dump is relevant')
-        return 0
-    logger.info('Blocklist is outdated, requesting a new dump')
-    try:
-        dumpFile = rknSW.getDumpFile(open(config['Global']['reqPath'], 'rb').read(),
-                                     open(config['Global']['reqPathSig'], 'rb').read()
-                                     )
-    except Exception as e:
-        logger.error(e)
-        return 2
-
-    if config['Global']['savetmp']:
-        open(file=config['Global']['tmppath']+'/dump.xml.zip', mode='wb').write(dumpFile)
+    # logger.debug('Obtaining dumpfile from ' + config['DumpLoader']['url'])
+    # try:
+    #     rknSW = rknsoapwrapper.RknSOAPWrapper(**config['DumpLoader'])
+    # except Exception as e:
+    #     logger.error('Couldn\'t connect to RKN WSDL\n' + str(e))
+    #
+    # dumpDate = rknSW.getLastDumpDateEx()
+    # if not dumpDate:
+    #     logger.error('Couldn\'t obtain dumpdates info')
+    #     return 1
+    # lastRknState.updateTimeStamps(dumpDate['lastDumpDate'],
+    #                               dumpDate['lastDumpDateUrgently'])
+    #
+    # if lastRknState.isActual():
+    #     logger.info('Last dump is relevant')
+    #     return 0
+    # logger.info('Blocklist is outdated, requesting a new dump')
+    # try:
+    #     dumpFile = rknSW.getDumpFile(open(config['Global']['reqPath'], 'rb').read(),
+    #                                  open(config['Global']['reqPathSig'], 'rb').read()
+    #                                  )
+    # except Exception as e:
+    #     logger.error(e)
+    #     return 2
+    #
+    # if config['Global']['savetmp']:
+    #     open(file=config['Global']['tmppath']+'/dump.xml.zip', mode='wb').write(dumpFile)
 
     # If you do wanna use downloaded file, take this instead of 'Loading' block above
-    # dumpFile = open(file=config['Global']['tmppath']+'/dump.xml.zip', mode='rb').read()
+    dumpFile = open(file=config['Global']['tmppath']+'/dump.xml.zip', mode='rb').read()
 
     connstr = buildConnStr(**config['DB'])
     # Parsing dump file
@@ -141,17 +141,26 @@ def main():
 
     logger.info('Dump have been parsed to database successfully')
 
-    # Synthetic
-    # Not implemented yet
-    if config['Miscellaneous']['Synthetic']:
-        synthetic.updateSynthetic(connstr)
-        logger.info('Synthetic restrictions have been generated')
-    else:
-        synthetic.purgeSynthetic(connstr)
-        logger.info('There are no synthetic restrictions from now')
-
     # Blocking
-    blocking.blockResources(connstr, *config['Blocking'])
+    # It may slow down but is safe
+    blocking.unblockResources(connstr)
+    # Fairly blocking first
+    logger.debug('Blocking fairly (as is)')
+    rows = blocking.blockResourcesFairly(connstr)
+    logger.info('Blocked fairly ' + str(rows) + ' rows')
+    for src, dst in config['Blocking']:
+        logger.info('Blocking ' + str(dst) + ' from ' + str(src))
+        rows = blocking.blockResourcesExcessively(connstr, src, dst)
+        if rows is not None:
+            logger.info('Blocked ' + str(rows) + ' rows')
+        else:
+            logger.warning('Nothing have been blocked from' + str(src) + ' to ' + str(dst))
+    # Blocking custom resouces
+    if config['Miscellaneous']['custom']:
+        logger.info('Blocking custom resources')
+        rows = blocking.blockCustom(connstr)
+        logger.info('Blocked ' + str(rows))
+
     # Saving Success to the state file
     lastRknState.updateParseInfo({"Success": True})
     logger.info('Blocking was finished, enjoy your 1984th')

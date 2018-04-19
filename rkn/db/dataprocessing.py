@@ -138,7 +138,7 @@ class DataProcessor(DatabaseHandler):
             .update({'last_dump_id': dump_id}, synchronize_session=False)
         self._session.flush()
 
-    def addResource(self, content_id, entitytype, value, synthetic=False, last_change=None):
+    def addResource(self, content_id, entitytype, value, is_custom=False, last_change=None):
         # Let the KeyErrorException raise if an alien blocktype revealed
         entitytype_id = self._entitytypeList[entitytype]
 
@@ -146,6 +146,6 @@ class DataProcessor(DatabaseHandler):
                                    last_change=last_change,
                                    entitytype_id=entitytype_id,
                                    value=value,
-                                   synthetic=synthetic))
+                                   is_custom=is_custom))
         self._session.flush()
 

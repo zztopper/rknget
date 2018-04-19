@@ -2,6 +2,9 @@ from rkn.db.blockdata import BlockData
 import re
 import ipaddress
 
+"""
+This module only operates with Resources.
+"""
 
 def __getBlockedDataSet(connstr, entityname):
     """

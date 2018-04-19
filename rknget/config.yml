@@ -28,7 +28,7 @@ Blocking:
   - [domain-mask, ip]
 
 Miscellaneous:
-  Synthetic: False
+  custom: True
 
 Logging:
   logpath: ./rknget.log

@@ -1,31 +1,34 @@
-import logging
-
 from rkn.db.resourceblocking import ResourceBlocker
 
 
-def blockResources(connstr, *args):
-    """
-    :param connstr: smth like "engine://user:pswd@host:port/dbname"
-    :param args: blockings maps
-    :return: maybe one day...
-    """
-    logger = logging.getLogger()
-
+def unblockResources(connstr):
     resblocker = ResourceBlocker(connstr)
-    # It may slow down but is safe
     resblocker.unblockAllResources()
-    # Fairly blocking first
-    logger.debug('Blocking fairly (as is)')
-    rows = resblocker.blockFairly()
-    logger.info('Blocked fairly ' + str(rows) + ' rows')
 
-    for src, dst in args:
-            logger.info('Blocking ' + str(dst) + ' from ' + str(src) + '...')
-            rows = resblocker.blockResources(src, dst)
-            if rows is not None:
-                logger.info('Blocked ' + str(rows) + ' rows')
-            else:
-                logger.warning('No such entity as ' + str(src) + ' or ' + str(dst))
 
-    resblocker.commitclose()
+def blockResourcesFairly(connstr):
+    """
+    Enables blocking resoures according to its blocktype and presence in the dump
+    Any other blocking is excessive a priori
+    :param connstr: smth like "engine://user:pswd@host:port/dbname"
+    :return: blocked rows count
+    """
+    return ResourceBlocker(connstr).blockFairly()
 
+
+def blockResourcesExcessively(connstr, src_entity, dst_entity):
+    """
+    Blocks dst_entities from src_entities data.
+    :param connstr: smth like "engine://user:pswd@host:port/dbname"
+    :return: blocked rows count
+    """
+    return ResourceBlocker(connstr).blockExcessively(src_entity, dst_entity)
+
+
+def blockCustom(connstr):
+    """
+    Blocks custom resources.
+    :param connstr: smth like "engine://user:pswd@host:port/dbname"
+    :return: blocked rows count
+    """
+    return ResourceBlocker(connstr).blockCustom()

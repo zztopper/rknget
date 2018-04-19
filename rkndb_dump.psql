@@ -288,11 +288,11 @@ ALTER SEQUENCE public.entry_id_seq OWNED BY public.entrytype.id;
 
 CREATE TABLE public.resource (
     id integer NOT NULL,
-    content_id integer NOT NULL,
+    content_id integer,
     last_change timestamp without time zone,
     entitytype_id integer NOT NULL,
     value text NOT NULL,
-    synthetic boolean DEFAULT false NOT NULL,
+    is_custom boolean DEFAULT false NOT NULL,
     is_blocked boolean
 );
 
@@ -462,7 +462,7 @@ COPY public.organisation (id, name) FROM stdin;
 -- Data for Name: resource; Type: TABLE DATA; Schema: public; Owner: rkn
 --
 
-COPY public.resource (id, content_id, last_change, entitytype_id, value, synthetic, is_blocked) FROM stdin;
+COPY public.resource (id, content_id, last_change, entitytype_id, value, is_custom, is_blocked) FROM stdin;
 \.
 
 

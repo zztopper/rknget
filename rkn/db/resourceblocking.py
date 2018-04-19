@@ -34,9 +34,8 @@ class ResourceBlocker(DatabaseHandler):
 
     def unblockAllResources(self):
         self._session.query(Resource).update({'is_blocked': False}, synchronize_session=False)
-        self._session.flush()
 
-    def blockResources(self, src_entity, dst_entity):
+    def blockExcessively(self, src_entity, dst_entity):
         """
         Blocks dst_entities from src_entities data.
         :return: Blocked rows count if implemented, else None
@@ -105,6 +104,16 @@ class ResourceBlocker(DatabaseHandler):
 
         self._blockResourcesByIDs(ids)
         return len(ids)
+
+    def blockCustom(self):
+        """
+        Enables blocking custom resources
+        :return: blocked rows count
+        """
+        rows_count_affected = self._session.query(Resource).filter_by(is_custom=True) \
+            .update({'is_blocked': True}, synchronize_session=False)
+        return rows_count_affected
+
 
     # def _blockHTTPSdomains(self):
     #     """
