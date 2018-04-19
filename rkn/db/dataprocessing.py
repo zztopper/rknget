@@ -17,6 +17,7 @@ class DataProcessor(DatabaseHandler):
         super(DataProcessor, self).__init__(connstr)
         self._initTableDicts()
 
+
     def _getNameIDMapping(self, table):
         """
         :param: table
@@ -139,13 +140,19 @@ class DataProcessor(DatabaseHandler):
         self._session.flush()
 
     def addResource(self, content_id, entitytype, value, is_custom=False, last_change=None):
+        """
+        Adds resource to the table
+        :return: new resource ID
+        """
         # Let the KeyErrorException raise if an alien blocktype revealed
         entitytype_id = self._entitytypeList[entitytype]
 
-        self._session.add(Resource(content_id=content_id,
-                                   last_change=last_change,
-                                   entitytype_id=entitytype_id,
-                                   value=value,
-                                   is_custom=is_custom))
+        res = Resource(content_id=content_id,
+                       last_change=last_change,
+                       entitytype_id=entitytype_id,
+                       value=value,
+                       is_custom=is_custom)
+        self._session.add(res)
         self._session.flush()
+        return res.id
 

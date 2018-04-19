@@ -3,7 +3,7 @@ import re
 import ipaddress
 
 """
-This module only operates with Resources.
+This module only operates with Resources data
 """
 
 def __getBlockedDataSet(connstr, entityname):

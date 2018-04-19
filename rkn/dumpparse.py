@@ -2,7 +2,7 @@ import zipfile
 import xml.etree.ElementTree
 import io
 
-import rkn.util
+import rkn.parseutils
 from rkn.db.dataprocessing import DataProcessor
 
 
@@ -79,28 +79,28 @@ def parse(dumpfile, connstr):
                         entitytype = 'https'
                     else:
                         entitytype = 'http'
-                    value = rkn.util.urlHandler(element.text)
+                    value = rkn.parseutils.urlHandler(element.text)
                 elif tag == 'domain':
                     # Why wouldn't be used content.attrib['blockType'] instead?
                     # Because domain tags don't depend on content blocktype.
-                    if not rkn.util.isdomain(element.text):
+                    if not rkn.parseutils.isdomain(element.text):
                         continue
                     if '*.' in str(element.text):
                         entitytype = 'domain-mask'
                         # Truncating *.
-                        value = rkn.util.punencodedom(
-                            rkn.util.domainCorrect(element.text)[2:])
+                        value = rkn.parseutils.punencodedom(
+                            rkn.parseutils.domainCorrect(element.text)[2:])
                     else:
                         entitytype = 'domain'
-                        value = rkn.util.punencodedom(
-                            rkn.util.domainCorrect(element.text))
+                        value = rkn.parseutils.punencodedom(
+                            rkn.parseutils.domainCorrect(element.text))
                 elif tag == 'ip':
-                    if not rkn.util.isip(element.text):
+                    if not rkn.parseutils.isip(element.text):
                         continue
                     entitytype = 'ip'
                     value = element.text
                 elif tag == 'ipSubnet':
-                    if not rkn.util.isipsub(element.text):
+                    if not rkn.parseutils.isipsub(element.text):
                         continue
                     entitytype = 'ipsubnet'
                     value = element.text
