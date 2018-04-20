@@ -17,6 +17,9 @@ CLI_DICT = {
     'resource': {'add': {'args': ['entitytype', 'value'],
                          'func': dbutils.addCustomResource
                          },
+                 'del': {'args': [],
+                         'func': dbutils.delCustomResource
+                 },
                  'find': {'args': ['value'],
                           'func': dbutils.findResource
                           }
@@ -27,7 +30,7 @@ CLI_DICT = {
                 'get': {'args': ['outer_id'],
                         'func': None
                         },
-                'find': {'args':['res_value'],
+                'find': {'args': ['res_value'],
                          'func': None
                          }
                 }

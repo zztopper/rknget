@@ -21,6 +21,9 @@ def urlHandler(urlstr):
     :return:
     """
     parsedUrl = urllib.parse.urlparse(urlstr)
+    # Erroneous proto is assumed to be http.
+    if parsedUrl[0] != 'http' and parsedUrl[0] != 'https':
+        parsedUrl[0] = 'http'
     domain = parsedUrl.netloc.split(':')[0]
     if parsedUrl.netloc.find(':') != -1:
         port = ':' + parsedUrl.netloc.split(':')[1]
@@ -56,21 +59,22 @@ def domainCorrect(s):
     return s
 
 
-# Surely python-way, but 5 times slower
-# def isip(s):
-#     try:
-#         ipaddress.ip_address(s)
-#         return True
-#     except ValueError:
-#         return False
-#
-#
-# def isipsub(s):
-#     try:
-#         ipaddress.ip_network(s)
-#         return True
-#     except ValueError:
-#         return False
+# Robust, but 5 times slower
+def _isip(s):
+    try:
+        ipaddress.ip_address(s)
+        return True
+    except ValueError:
+        return False
+
+
+# Robust, but 5 times slower
+def _isipsub(s):
+    try:
+        ipaddress.ip_network(s)
+        return True
+    except ValueError:
+        return False
 
 
 __ipregex = re.compile('''\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}''')

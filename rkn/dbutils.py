@@ -1,8 +1,13 @@
 from rkn.db.dataprocessing import DataProcessor
 from rkn import parseutils
 
-from datetime import datetime
-import ipaddress
+# Checks
+checks = {
+    'ip': parseutils._isip,
+    'ipsubnet': parseutils._isipsub,
+    'domain': parseutils.isdomain,
+    'domain-mask': parseutils.isdomain
+}
 
 
 def addCustomResource(connstr, entitytype, value, **kwargs):
@@ -12,17 +17,30 @@ def addCustomResource(connstr, entitytype, value, **kwargs):
     :return: row ID or None for erroneous entitytype
     """
     try:
+        if not checks[entitytype](value):
+            return 'Value error'
+    except KeyError:
+        # No checks for this entity type, but going ahead.
+        pass
+    try:
         return(
-            DataProcessor(connstr).addResource(
-                content_id=None,
+            DataProcessor(connstr).addCustomResource(
                 entitytype=entitytype,
                 value=value,
-                is_custom=True,
-                last_change=datetime.now().astimezone()
             )
         )
     except KeyError:
-        return None
+        return "Entity type error"
+
+
+def delCustomResource(connstr, entitytype, value, **kwargs):
+    """
+    Deletes custom resource to the database's Resource table.
+    :param connstr: smth like "engine://user:pswd@host:port/dbname"
+    :return: row ID or None if nothing have been done
+    """
+
+    return 'test'
 
 
 def findResource(connstr, value, **kwargs):

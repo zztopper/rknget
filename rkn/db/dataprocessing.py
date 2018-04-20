@@ -156,3 +156,27 @@ class DataProcessor(DatabaseHandler):
         self._session.flush()
         return res.id
 
+    def addCustomResource(self, entitytype, value):
+        """
+        Adds custom resource to the table.
+        :return: new or existing resource ID
+        """
+        # Let the KeyErrorException raise if an alien blocktype revealed
+        entitytype_id = self._entitytypeList[entitytype]
+
+        # Checking if such resource exists
+        res = self._session.query(Resource).\
+            filter_by(entitytype_id=entitytype_id).\
+            filter_by(value=value). \
+            filter_by(is_custom=True). \
+            first()
+
+        if res is None:
+            return self.addResource(content_id=None,
+                                    last_change=self._now,
+                                    entitytype=entitytype,
+                                    value=value,
+                                    is_custom=True)
+        else:
+            return res.id
+
