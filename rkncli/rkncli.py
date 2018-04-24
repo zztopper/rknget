@@ -3,9 +3,6 @@
 import sys
 import yaml
 import argparse
-import os
-import subprocess
-from datetime import datetime
 
 sys.path.append('../')
 from rkn import dbutils
@@ -17,21 +14,23 @@ CLI_DICT = {
     'resource': {'add': {'args': ['entitytype', 'value'],
                          'func': dbutils.addCustomResource
                          },
-                 'del': {'args': [],
+                 'del': {'args': ['entitytype', 'value'],
                          'func': dbutils.delCustomResource
-                 },
-                 'find': {'args': ['value'],
-                          'func': dbutils.findResource
+                         },
+                 'find': {'args': ['value', '...'],
+                          'func': dbutils.findResource,
+                          'help': 'Point columns or all will be shown'
                           }
                  },
     'content': {'del': {'args': ['outer_id'],
                         'func': None
                         },
-                'get': {'args': ['outer_id'],
-                        'func': None
+                'get': {'args': ['outer_id', '...'],
+                        'func': dbutils.getContent,
+                        'help': 'Add \'full\' to show resource info'
                         },
-                'find': {'args': ['res_value'],
-                         'func': None
+                'find': {'args': ['value', '...'],
+                         'func': dbutils.findResource
                          }
                 }
 }
@@ -54,9 +53,13 @@ def parseArgs():
         subjparser = subparsers.add_parser(subject)
         subsubparsers = subjparser.add_subparsers(title='Actions', dest='action')
         for action, actdict in actiondict.items():
-            actparser = subsubparsers.add_parser(action)
+            actparser = subsubparsers.add_parser(action, help=actdict.get('help'))
             for arg in actdict['args']:
-                actparser.add_argument(arg)
+                if arg == '...':
+                    actparser.add_argument('args', nargs='*')
+                else:
+                    actparser.add_argument(arg)
+
 
     if len(sys.argv) == 1:
         argparser.print_help()
@@ -90,10 +93,11 @@ def buildConnStr(engine, host, port, dbname, user, password, **kwargs):
            host + ':' + str(port) + '/' + dbname
 
 
-
-
 def main():
-    args = vars(parseArgs())
+    parsedargs = parseArgs()
+    if parsedargs is None:
+        return 2
+    args = vars(parsedargs)
     # If argv are invalid, the program would exit and no actions would be further
 
     config = initConf(args['confpath'])
@@ -102,11 +106,12 @@ def main():
     elif args['connstr'] is None and config is None:
         print('Define a connection string!')
         return 3
-
-    print(str(
-        CLI_DICT[args['subject']][args['action']]['func'](**args)
-    ))
-
+    try:
+        print(str(
+            CLI_DICT[args['subject']][args['action']]['func'](**args)
+        ))
+    except KeyError:
+        print('No such key')
 
 if __name__ == "__main__":
     main()

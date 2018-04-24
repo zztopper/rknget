@@ -9,9 +9,9 @@ class DataProcessor(DatabaseHandler):
     Successor class, which provides data processing functions
     """
 
-    _orgList = dict()
-    _blocktypeList = dict()
-    _entitytypeList = dict()
+    _orgDict = dict()
+    _blocktypeDict = dict()
+    _entitytypeDict = dict()
 
     def __init__(self, connstr):
         super(DataProcessor, self).__init__(connstr)
@@ -32,9 +32,9 @@ class DataProcessor(DatabaseHandler):
         """
         Fetching dictionaries for future usage
         """
-        self._blocktypeList = self._getNameIDMapping(BlockType)
-        self._entitytypeList = self._getNameIDMapping(Entitytype)
-        self._orgList = self._getNameIDMapping(Organisation)
+        self._blocktypeDict = self._getNameIDMapping(BlockType)
+        self._entitytypeDict = self._getNameIDMapping(Entitytype)
+        self._orgDict = self._getNameIDMapping(Organisation)
 
     def addDumpInfoRecord(self, updateTime, updateTimeUrgently, **kwargs):
         """
@@ -60,12 +60,12 @@ class DataProcessor(DatabaseHandler):
         <decision> tag attributes to simplify kwargs passthrough
         """
         # Adding missing organisation to the table
-        if self._orgList.get(org) is None:
+        if self._orgDict.get(org) is None:
             newOrg = Organisation(name=org)
             self._session.add(newOrg)
             # Let it be committed, not so much orgs exist
             self._session.flush()
-            self._orgList[org] = newOrg.id
+            self._orgDict[org] = newOrg.id
 
         # Insert or update is not supported by this ORM module
 
@@ -75,7 +75,7 @@ class DataProcessor(DatabaseHandler):
 
         newDes = Decision(decision_date=date,
                  decision_code=number,
-                 org_id=self._orgList[org])
+                 org_id=self._orgDict[org])
 
         self._session.add(newDes)
         self._session.flush()
@@ -88,7 +88,7 @@ class DataProcessor(DatabaseHandler):
         <content> tag attributes to simplify kwargs passthrough
         """
         # Let the KeyErrorException raise if an alien blocktype revealed
-        blocktype_id = self._blocktypeList[blockType]
+        blocktype_id = self._blocktypeDict[blockType]
 
         # Checking whether content is in the table but disabled
         cnt = self._session.query(Content).filter_by(outer_id=id).first()
@@ -145,7 +145,7 @@ class DataProcessor(DatabaseHandler):
         :return: new resource ID
         """
         # Let the KeyErrorException raise if an alien blocktype revealed
-        entitytype_id = self._entitytypeList[entitytype]
+        entitytype_id = self._entitytypeDict[entitytype]
 
         res = Resource(content_id=content_id,
                        last_change=last_change,
@@ -155,28 +155,3 @@ class DataProcessor(DatabaseHandler):
         self._session.add(res)
         self._session.flush()
         return res.id
-
-    def addCustomResource(self, entitytype, value):
-        """
-        Adds custom resource to the table.
-        :return: new or existing resource ID
-        """
-        # Let the KeyErrorException raise if an alien blocktype revealed
-        entitytype_id = self._entitytypeList[entitytype]
-
-        # Checking if such resource exists
-        res = self._session.query(Resource).\
-            filter_by(entitytype_id=entitytype_id).\
-            filter_by(value=value). \
-            filter_by(is_custom=True). \
-            first()
-
-        if res is None:
-            return self.addResource(content_id=None,
-                                    last_change=self._now,
-                                    entitytype=entitytype,
-                                    value=value,
-                                    is_custom=True)
-        else:
-            return res.id
-

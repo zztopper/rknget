@@ -29,3 +29,17 @@ class DatabaseHandler:
     def commitclose(self):
         self._session.commit()
         self._session.close()
+
+    def _outputQueryRows(self, rowslist, *fields):
+        """
+        Common function.
+        :param rowslist: The list of rows returned by select query.
+        :param fields: arbitrary list of existing fields
+        :return: fields list and values list's list
+        """
+        if len(rowslist) == 0:
+            return [], [[]]
+        if len(fields) == 0:
+            return list(rowslist[0]._fields), [list(row) for row in rowslist]
+        else:
+            return fields, [[getattr(row, f) for f in fields] for row in rowslist]

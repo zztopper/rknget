@@ -9,7 +9,7 @@ class ResourceBlocker(DatabaseHandler):
     Successor class, which provides resource blocking functions
     """
 
-    _entitytypeList = dict()
+    _entitytypeDict = dict()
 
     def __init__(self, connstr):
         super(ResourceBlocker, self).__init__(connstr)
@@ -29,7 +29,7 @@ class ResourceBlocker(DatabaseHandler):
         """
         Fetching dictionaries for future usage
         """
-        self._entitytypeList = self._getNameIDMapping(Entitytype)
+        self._entitytypeDict = self._getNameIDMapping(Entitytype)
 
 
     def unblockAllResources(self):
@@ -41,8 +41,8 @@ class ResourceBlocker(DatabaseHandler):
         :return: Blocked rows count if implemented, else None
         """
         try:
-            src_entity_id = self._entitytypeList[src_entity]
-            dst_entity_id = self._entitytypeList[dst_entity]
+            src_entity_id = self._entitytypeDict[src_entity]
+            dst_entity_id = self._entitytypeDict[dst_entity]
         except KeyError:
             return None
         return self._blockRelated(src_entity_id, dst_entity_id)
