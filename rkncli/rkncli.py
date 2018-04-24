@@ -30,7 +30,7 @@ CLI_DICT = {
                           }
                  },
     'content': {'del': {'args': ['outer_id'],
-                        'func': None
+                        'func': dbutils.delContent
                         },
                 'get': {'args': ['outer_id', '...'],
                         'func': dbutils.getContent,

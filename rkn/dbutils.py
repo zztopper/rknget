@@ -85,7 +85,7 @@ def getContent(connstr, outer_id, **kwargs):
     result = _dbAsText(headers, [row])
     if 'full' in kwargs.get('args'):
         content_id = row[headers.index('id')]
-        result = result + 'RESOURCES'
+        result = result + '\nRESOURCES\n'
         result = result + _dbAsText(*DBOperator(connstr).getResourceByContentID(content_id))
 
     return result
@@ -100,3 +100,12 @@ def showDumpInfo(connstr, **kwargs):
 
     return '\n'.join(str(k).ljust(16) + '\t' + str(v)
                      for k, v in DBOperator(connstr).getLastDumpInfo().items())
+
+
+def delContent(connstr, outer_id, **kwargs):
+    """
+    Deletes custom resource to the database's Resource table.
+    :param connstr: smth like "engine://user:pswd@host:port/dbname"
+    :return: True if deleted, False otherwise
+    """
+    return DBOperator(connstr).delContent(outer_id)

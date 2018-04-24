@@ -3,7 +3,7 @@ from sqlalchemy import func
 
 from rkn.db.dataprocessing import DataProcessor
 from rkn.db.scheme import *
-from sqlalchemy import inspect
+
 
 class DBOperator(DataProcessor):
     """
@@ -26,11 +26,11 @@ class DBOperator(DataProcessor):
             join(Entitytype, Resource.entitytype_id == Entitytype.id). \
             join(BlockType, Content.blocktype_id == BlockType.id)
         self._contentQuery = self._session.query(Content.id,
-                                                  Content.outer_id,
-                                                  Content.include_time,
-                                                  Content.in_dump,
-                                                  Resource.is_blocked,
-                                                  DumpInfo.parse_time). \
+                                                 Content.outer_id,
+                                                 Content.include_time,
+                                                 Content.in_dump,
+                                                 Resource.is_blocked,
+                                                 DumpInfo.parse_time). \
             join(BlockType, Content.blocktype_id == BlockType.id). \
             join(DumpInfo, Content.first_dump_id == DumpInfo.id)
 
@@ -60,20 +60,19 @@ class DBOperator(DataProcessor):
 
     def delCustomResource(self, entitytype, value):
         """
-        Deletes custom resource to the table.
+        Deletes custom resource from the table.
         :return: True if deleted, False otherwise
         """
         # Let the KeyErrorException raise if an alien blocktype revealed
         entitytype_id = self._entitytypeDict[entitytype]
 
-        # Checking if such resource exists
-        id = self._session.query(Resource). \
+        result = self._session.query(Resource). \
             filter_by(entitytype_id=entitytype_id). \
             filter_by(value=value). \
             filter_by(is_custom=True). \
             delete()
 
-        return [False, True][id]
+        return [False, True][result]
 
     def findResource(self, value, *args):
         """
@@ -89,7 +88,10 @@ class DBOperator(DataProcessor):
     def getContent(self, outer_id):
         row = self._contentQuery. \
             filter(Content.outer_id == outer_id).first()
-        return row._fields, list(row)
+        if row:
+            return row._fields, list(row)
+        else:
+            return [], []
 
     def getResourceByContentID(self, content_id, *args):
         rows = self._resourceQuery. \
@@ -110,3 +112,14 @@ class DBOperator(DataProcessor):
         return {
             f: getattr(row, f) for f in fields
         }
+
+    def delContent(self, outer_id):
+        """
+        Deletes content from the table.
+        :return: True if deleted, False otherwise
+        """
+        result = self._session.query(Content). \
+            filter_by(outer_id=outer_id). \
+            delete()
+
+        return [False, True][result]
