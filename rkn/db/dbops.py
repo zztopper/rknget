@@ -1,8 +1,9 @@
 from sqlalchemy import or_, and_
+from sqlalchemy import func
 
 from rkn.db.dataprocessing import DataProcessor
 from rkn.db.scheme import *
-
+from sqlalchemy import inspect
 
 class DBOperator(DataProcessor):
     """
@@ -94,3 +95,18 @@ class DBOperator(DataProcessor):
         rows = self._resourceQuery. \
             filter(Resource.content_id == content_id).all()
         return self._outputQueryRows(rows, *args)
+
+    def getBlockCounters(self):
+        rows = self._session.query(Entitytype.name,
+                                   func.count(True)). \
+            join(Resource, Resource.entitytype_id == Entitytype.id). \
+            group_by(Entitytype.id).all()
+        return self._outputQueryRows(rows)
+
+    def getLastDumpInfo(self):
+        row = self._session.query(DumpInfo). \
+            order_by(DumpInfo.id.desc()).first()
+        fields = DumpInfo.__table__.columns.keys()
+        return {
+            f: getattr(row, f) for f in fields
+        }

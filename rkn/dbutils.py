@@ -14,6 +14,20 @@ checks = {
 }
 
 
+def _dbAsText(headers, rows):
+    """
+    Auxilliary function.
+    :param headers: headers list
+    :param rows: list of values lists
+    :return:
+    """
+    result = list()
+    result.append('\t'.join(headers))
+    for row in rows:
+        result.append('\t'.join(map(str, row)))
+    return '\n'.join(result)
+
+
 def addCustomResource(connstr, entitytype, value, **kwargs):
     """
     Adds custom resource to the database's Resource table.
@@ -62,27 +76,27 @@ def findResource(connstr, value, **kwargs):
     """
     if kwargs.get('args') is None:
         kwargs['args'] = []
-    headers, rows = DBOperator(connstr).findResource(value, *kwargs['args'])
-    result = list()
-    result.append('\t'.join(headers))
-    for row in rows:
-        result.append('\t'.join(map(str, row)))
-
-    return '\n'.join(result)
+    return _dbAsText(*DBOperator(connstr).findResource(value, *kwargs['args']))
 
 
 def getContent(connstr, outer_id, **kwargs):
 
     headers, row = DBOperator(connstr).getContent(outer_id)
-    result = list()
-    result.append('\t'.join(headers))
-    result.append('\t'.join(map(str, row)))
+    result = _dbAsText(headers, [row])
     if 'full' in kwargs.get('args'):
         content_id = row[headers.index('id')]
-        headers, rows = DBOperator(connstr).getResourceByContentID(content_id)
-        result.append('RESOURCES')
-        result.append('\t'.join(headers))
-        for row in rows:
-            result.append('\t'.join(map(str, row)))
+        result = result + 'RESOURCES'
+        result = result + _dbAsText(*DBOperator(connstr).getResourceByContentID(content_id))
 
-    return '\n'.join(result)
+    return result
+
+
+def showDumpStats(connstr, **kwargs):
+
+    return _dbAsText(*DBOperator(connstr).getBlockCounters())
+
+
+def showDumpInfo(connstr, **kwargs):
+
+    return '\n'.join(str(k).ljust(16) + '\t' + str(v)
+                     for k, v in DBOperator(connstr).getLastDumpInfo().items())

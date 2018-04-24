@@ -11,6 +11,13 @@ CONFIG_PATH = 'config.yml'
 
 
 CLI_DICT = {
+    'dumpinfo': {'show': {'args': [],
+                          'func': dbutils.showDumpInfo,
+                          },
+                 'stats': {'args': [],
+                           'func': dbutils.showDumpStats,
+                           }
+                 },
     'resource': {'add': {'args': ['entitytype', 'value'],
                          'func': dbutils.addCustomResource
                          },
@@ -28,10 +35,7 @@ CLI_DICT = {
                 'get': {'args': ['outer_id', '...'],
                         'func': dbutils.getContent,
                         'help': 'Add \'full\' to show resource info'
-                        },
-                'find': {'args': ['value', '...'],
-                         'func': dbutils.findResource
-                         }
+                        }
                 }
 }
 
