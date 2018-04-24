@@ -51,7 +51,15 @@ def parse(dumpfile, connstr):
         dump_outer_id = int(content.attrib['id'])
         dump_hash = content.attrib['hash']
         # BTW, we don't consider hashes in dump to be null.
-        if outerHashes.get(dump_outer_id) is None:
+        if outerHashes.get(dump_outer_id) == dump_hash:
+            outerHashes.pop(dump_outer_id)
+            # Don't touch the entries not having been changed
+            continue
+        else:
+            if outerHashes.get(dump_outer_id) is not None:
+                # Divergence
+                dataproc.delContent(dump_outer_id)
+                outerHashes.pop(dump_outer_id)
             # We've got new content entry. Importing decision
             des = content.find('decision')
             if des is None:
@@ -59,16 +67,6 @@ def parse(dumpfile, connstr):
             decision_id = dataproc.addDecision(**des.attrib)  # date, number, org
             # Importing content
             content_id = dataproc.addContent(dump_id, decision_id, **content.attrib)
-
-        elif outerHashes.get(dump_outer_id) != dump_hash:
-            # Refilling content's resources
-            content_id = dataproc.pruneContentResources(dump_outer_id)
-            outerHashes.pop(dump_outer_id)
-
-        elif outerHashes.get(dump_outer_id) == dump_hash:
-            outerHashes.pop(dump_outer_id)
-            # Don't touch the entries not having been changed
-            continue
 
         # resourses parsing...
         # walking through the available tags

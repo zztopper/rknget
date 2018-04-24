@@ -114,16 +114,14 @@ class DataProcessor(DatabaseHandler):
         return newContent.id
 
 
-    def pruneContentResources(self, outer_id):
+    def delContent(self, outer_id):
         """
-        Deletes all content's resources
+        Deletes content and all its resources
         :param outer_id: from dump
         :return: content_id
         """
-        cnt = self._session.query(Content.id).filter_by(outer_id=outer_id).first()
-        self._session.query(Resource).filter_by(content_id=cnt.id).delete()
+        self._session.query(Content.id).filter_by(outer_id=outer_id).delete()
         self._session.flush()
-        return cnt.id
 
     def getOuterIDHashes(self):
         # The set is faster because unsorted
