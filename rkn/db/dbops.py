@@ -74,15 +74,22 @@ class DBOperator(DataProcessor):
 
         return [False, True][result]
 
-    def findResource(self, value, *args):
+    def findResource(self, value, entitytype=None, *args):
         """
         Searches resources in the table by value
         :param value: value to search in
         :param fields: column names
+        :param entitytype: type of entity or any if not set
         :return: All entries matching the value. With headers.
         """
-        rows = self._resourceQuery. \
-            filter(Resource.value.like('%' + value + '%')).all()
+        query = self._resourceQuery. \
+            filter(Resource.value.like('%' + value + '%'))
+
+        entitytype_id = self._entitytypeDict.get(entitytype)
+        if entitytype_id is not None:
+            query = query.filter(Resource.entitytype_id == entitytype_id)
+
+        rows = query.all()
         return self._outputQueryRows(rows, *args)
 
     def getContent(self, outer_id):

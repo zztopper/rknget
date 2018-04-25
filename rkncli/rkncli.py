@@ -24,9 +24,10 @@ CLI_DICT = {
                  'del': {'args': ['entitytype', 'value'],
                          'func': dbutils.delCustomResource
                          },
-                 'find': {'args': ['value', '...'],
+                 'find': {'args': ['entitytype', 'value', '...'],
                           'func': dbutils.findResource,
-                          'help': 'Point columns or all will be shown'
+                          'help': 'Point columns, else all will be shown. ' +
+                                  'Set \'all\' for any entitytype'
                           }
                  },
     'content': {'del': {'args': ['outer_id'],

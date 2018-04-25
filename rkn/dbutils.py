@@ -68,7 +68,7 @@ def delCustomResource(connstr, entitytype, value, **kwargs):
         return "Entity type error"
 
 
-def findResource(connstr, value, **kwargs):
+def findResource(connstr, entitytype, value, **kwargs):
     """
     Adds custom resource to the database's Resource table.
     :param connstr: smth like "engine://user:pswd@host:port/dbname"
@@ -76,7 +76,9 @@ def findResource(connstr, value, **kwargs):
     """
     if kwargs.get('args') is None:
         kwargs['args'] = []
-    return _dbAsText(*DBOperator(connstr).findResource(value, *kwargs['args']))
+    if entitytype == 'all':
+        entitytype = None
+    return _dbAsText(*DBOperator(connstr).findResource(value, entitytype, *kwargs['args']))
 
 
 def getContent(connstr, outer_id, **kwargs):
