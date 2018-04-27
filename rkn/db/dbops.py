@@ -112,14 +112,6 @@ class DBOperator(DataProcessor):
             group_by(Entitytype.id).all()
         return self._outputQueryRows(rows)
 
-    def getLastDumpInfo(self):
-        row = self._session.query(DumpInfo). \
-            order_by(DumpInfo.id.desc()).first()
-        fields = DumpInfo.__table__.columns.keys()
-        return {
-            f: getattr(row, f) for f in fields
-        }
-
     def delContent(self, outer_id):
         """
         Deletes content from the table.
@@ -130,3 +122,18 @@ class DBOperator(DataProcessor):
             delete()
 
         return [False, True][result]
+
+    def getLastDumpInfo(self):
+        """
+        The same function as the dataprocessing's one.
+        Returns the last dump state. If no entries, empty dict.
+        :return: dict column->value or dict().
+        """
+        row = self._session.query(DumpInfo). \
+            order_by(DumpInfo.id.desc()).first()
+        fields = DumpInfo.__table__.columns.keys()
+        if row is None:
+            return dict()
+        return {
+            f: getattr(row, f) for f in fields
+        }

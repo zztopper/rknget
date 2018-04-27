@@ -19,23 +19,18 @@ def getBlockedIPsMerged(connstr):
     """
     Merges IPs into IP subnets containing first ones.
     :param connstr: smth like "engine://user:pswd@host:port/dbname"
-    :return: 2 sets: ips and ip subnets
+    :return: The total and the set of ip subnets, using /32 for ips.
     """
     bldt = BlockData(connstr)
-    ips = bldt.getBlockedResourcesSet('ip')
-    ipsubs = bldt.getBlockedResourcesSet('ipsubnet')
-
-    for sub in ipsubs:
-        s = ipaddress.ip_network(sub)
-        for ip in ips.copy():
-            if ipaddress.ip_address(ip) in s:
-                ips.discard(ip)
-
-    return ips, ipsubs
+    ips = [ipaddress.ip_network(addr) for addr in bldt.getBlockedResourcesSet('ip')]
+    ipsubs = [ipaddress.ip_network(addr) for addr in bldt.getBlockedResourcesSet('ipsubnet')]
+    ipsall = ips + ipsubs
+    return sum(map(lambda x: x.num_addresses, ipsall)),\
+           set(map(str, ipaddress.collapse_addresses(ipsall)))
 
 
 def getBlockedDomainsMerged(connstr):
-    """
+    """9
     We don't need to block domains if the same wildcard domain is blocked
     We don't need to block 3-level wildcard if 2-level wildcard is blocked
     :param connstr: smth like "engine://user:pswd@host:port/dbname"
@@ -44,7 +39,6 @@ def getBlockedDomainsMerged(connstr):
     bldt = BlockData(connstr)
     domains = bldt.getBlockedResourcesSet('domain')
     wdomains = bldt.getBlockedResourcesSet('domain-mask')
-
     # Dedupe wdomains
     wds = wdomains.copy()
     for wd in wds:

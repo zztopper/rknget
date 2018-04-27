@@ -5,7 +5,7 @@ from datetime import datetime
 
 class DatabaseHandler:
     """
-    Base abstract class
+    Basic abstracted class
     """
 
     _now = None

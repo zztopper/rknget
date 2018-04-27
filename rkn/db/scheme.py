@@ -69,3 +69,13 @@ class DumpInfo(Base):
     update_time_urgently = Column(DateTime)
     parse_time = Column(DateTime, nullable=False)
     parsed = Column(Boolean, default=False)
+
+
+class Log(Base):
+    __tablename__ = 'log'
+    id = Column(Integer, Sequence('log_id_seq'), primary_key=True)
+    exit_code = Column(Integer)
+    start_time = Column(DateTime, nullable=False)
+    finish_time = Column(DateTime)
+    procname = Column(String, nullable=False)
+    result = Column(String)

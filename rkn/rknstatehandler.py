@@ -1,3 +1,8 @@
+"""
+DEPRECATED
+In DB now
+"""
+
 import yaml
 import time
 import math

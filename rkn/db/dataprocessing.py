@@ -36,6 +36,20 @@ class DataProcessor(DatabaseHandler):
         self._entitytypeDict = self._getNameIDMapping(Entitytype)
         self._orgDict = self._getNameIDMapping(Organisation)
 
+    def getLastDumpInfo(self):
+        """
+        Returns the last dump state. If no entries, empty dict.
+        :return: dict column->value or dict().
+        """
+        row = self._session.query(DumpInfo). \
+            order_by(DumpInfo.id.desc()).first()
+        fields = DumpInfo.__table__.columns.keys()
+        if row is None:
+            return None
+        return {
+            f: getattr(row, f) for f in fields
+        }
+
     def addDumpInfoRecord(self, updateTime, updateTimeUrgently, **kwargs):
         """
         The arguments were named corresponding with

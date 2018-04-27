@@ -8,9 +8,11 @@ import subprocess
 from datetime import datetime
 
 sys.path.append('../')
-from rkn import restrictions
+from rkn import restrictions, procutils
 
 CONFIG_PATH = 'config.yml'
+
+PROCNAME = __file__.split(os.path.sep)[-1].split('.')[0]
 
 
 # Parsing arguments
@@ -65,7 +67,7 @@ def createFolders(*args):
     """
     Creates nesessary folders
     :param args: paths tuple
-    :return: Nothingzzzя
+    :return: Nothing
     """
     for path in args:
         try:
@@ -114,41 +116,41 @@ def main():
     config = initConf(configPath)
 
     logger = initLog(**config['Logging'])
-
     logger.debug('Successfully started at with config:\n' + str(config))
     createFolders(config['Global']['tmppath'])
-    updateStateYML(statepath=config['Global']['statepath'],
-                   **{'Program': {'start_time': str(datetime.now().astimezone())}})
 
     connstr = buildConnStr(**config['DB'])
 
-    # Fetching ip restrictions
-    logger.info('Fetching restrictions list from DB')
     try:
-        ipSet, ipsubSet = restrictions.getBlockedIPsMerged(connstr)
-
-        updateStateYML(statepath=config['Global']['statepath'],
-                       **{'DB':
-                            {'ipaddrs': len(ipSet),
-                             'subnets': len(ipsubSet),
-                             'last_successfull': True
-                             }
-                        })
+        running = procutils.checkRunning(connstr, PROCNAME)
     except Exception as e:
-        logger.error(e)
-        updateStateYML(statepath=config['Global']['statepath'],
-                       **{'DB': {'last_successfull': False}})
-        return 1
+        logger.critical('Couldn\'t obtain information from the database\n' + str(e))
+        return 9
+    if running and not config['Global'].get('forcerun'):
+        logger.critical('The same program is running at this moment. Halting...')
+        return 0
+    log_id = procutils.addLogEntry(connstr, PROCNAME)
 
-    # Making /32 with ips.
-    ips = {ip+'/32' for ip in ipSet}
-    logger.info('Updating bird configuration and restarting daemon...')
-    updateBirdConfig(**config['Bird'],
-                     ipsubset=ipsubSet.union(ips))
+    try:
+        # Fetching ip restrictions
+        logger.info('Fetching restrictions list from DB')
+        totalblocked, ipsubSet = restrictions.getBlockedIPsMerged(connstr)
+        logger.info('Updating bird configuration and restarting daemon...')
+        # Updating BGP casts
+        updateBirdConfig(**config['Bird'],
+                         ipsubset=ipsubSet)
+        # Updating the state in the database
+        result = [str(totalblocked) + ' ip entries are routed to blackhole',
+                  str(len(ipsubSet)) + ' entries are announced by BGP daemon']
+        logger.info(', '.join(result))
+        procutils.finishJob(connstr, log_id, 0, '\n'.join(result))
+        logger.info('Blocking was finished, enjoy your 1984th')
 
-    logger.info('Blocking was finished, enjoy your 1984th')
-    updateStateYML(statepath=config['Global']['statepath'],
-                   **{'Program': {'finish_time': str(datetime.now().astimezone())}})
+    except Exception as e:
+        procutils.finishJob(connstr, log_id, 1, str(e))
+        logger.error(str(e))
+        return getattr(e, 'errno', 1)
+
     return 0
 
 

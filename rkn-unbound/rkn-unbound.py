@@ -8,10 +8,11 @@ import subprocess
 from datetime import datetime
 
 sys.path.append('../')
-from rkn import restrictions
+from rkn import restrictions, procutils
 
 CONFIG_PATH = 'config.yml'
 
+PROCNAME = __file__.split(os.path.sep)[-1].split('.')[0]
 
 # Parsing arguments
 def confpath_argv():
@@ -80,23 +81,6 @@ def buildConnStr(engine, host, port, dbname, user, password, **kwargs):
            host + ':' + str(port) + '/' + dbname
 
 
-def updateStateYML(statepath, **kwargs):
-    """
-    Considered to merge dicts
-    :param statepath: the path to a file
-    :param kwargs: any state parameters you want
-    """
-    try:
-        state = yaml.load(open(file=statepath, mode='r'))
-        yaml.dump({**state, **kwargs},
-                  open(file=statepath, mode='w'),
-                  default_flow_style=False)
-    except:
-        yaml.dump(kwargs,
-                  open(file=statepath, mode='w'),
-                  default_flow_style=False)
-
-
 def getUnboundLocalDomains(binarypath, stubip, **kwargs):
     """
     Gets domains set from unbound local zones data
@@ -140,10 +124,22 @@ def addUnboundZones(binarypath, stubip, domainset, zonetype, **kwargs):
     :param zonetype: 'static', 'redirect', 'transparent', etc. See unbound.conf manuals.
     :return: blocked domains count
     """
-    devnull=open(os.devnull, "w")
-    for domain in domainset:
-        subprocess.call([binarypath, 'local_zone', domain, zonetype], stdout=devnull)
-        subprocess.call([binarypath, 'local_data', domain + '. IN A ' + stubip], stdout=devnull)
+    # for domain in domainset:
+    #     subprocess.call([binarypath, 'local_zone', domain, zonetype], stdout=devnull)
+    #     subprocess.call([binarypath, 'local_data', domain + '. IN A ' + stubip], stdout=devnull)
+    devnull = open(os.devnull, "w")
+    stdin = (' ' + zonetype + '\n').join(domainset) + ' ' + zonetype + '\n'
+    s = subprocess.Popen([binarypath, 'local_zones'],
+                         stdout=devnull,
+                         stdin=subprocess.PIPE,
+                         encoding='UTF8')
+    s.communicate(input=stdin)
+    stdin = ('. IN A ' + stubip + '\n').join(domainset) + '. IN A ' + stubip + '\n'
+    s = subprocess.Popen([binarypath, 'local_datas'],
+                         stdout=devnull,
+                         stdin=subprocess.PIPE,
+                         encoding='UTF8')
+    s.communicate(input=stdin)
     return len(domainset)
 
 
@@ -155,12 +151,17 @@ def delUnboundZones(binarypath, domainset, **kwargs):
     :return: blocked domains count
     """
     devnull = open(os.devnull, "w")
-    for domain in domainset:
-        subprocess.call([binarypath, 'local_zone_remove', domain],  stdout=devnull)
+    stdin = '\n'.join(domainset) + '\n'
+    s = subprocess.Popen([binarypath, 'local_zones_remove'],
+                         stdout=devnull,
+                         stdin=subprocess.PIPE,
+                         encoding='UTF8')
+    s.communicate(input=stdin)
+
     return len(domainset)
 
 
-def genUnboundConfig(confpath, stubip, domainset, wdomainset, **kwargs):
+def buildUnboundConfig(confpath, stubip, domainset, wdomainset, **kwargs):
     configfile = open(file=confpath, mode='w')
 
     for domain in domainset:
@@ -183,81 +184,61 @@ def main():
     config = initConf(configPath)
 
     logger = initLog(**config['Logging'])
-
-    # TODO: PID implementation
-    # Creating PID file
-    # if os.path.isfile(config['Global']['pidpath']):
-    #     logger.warning('The program is suspected to be running ' +
-    #                  'as long as the PID file ' + config['Global']['pidfile'] + ' exists.')
-    #     logger.info('Delete the PID file manually or wait until the first copy get finished')
-    #     return 0
-    # else:
-    #     open(config['Global']['pidpath'], 'w').close()
-
     logger.debug('Successfully started at with config:\n' + str(config))
     createFolders(config['Global']['tmppath'])
-    updateStateYML(statepath=config['Global']['statepath'],
-                   **{'Program': {'start_time': str(datetime.now().astimezone())}})
-
-    logger.info('Obtaining current domain blocklists on unbound daemon')
-    domainUBCSet, wdomainUBCSet = getUnboundLocalDomains(**config['Unbound'])
 
     connstr = buildConnStr(**config['DB'])
-    # Parsing dump file
-    logger.info('Fetching restrictions list from DB')
-    try:
-        domainBlockSet, wdomainBlockSet = restrictions.getBlockedDomainsMerged(connstr)
-        updateStateYML(statepath=config['Global']['statepath'],
-                       **{'DB':
-                            {'domains': len(domainBlockSet),
-                             'wdomains': len(wdomainBlockSet),
-                             'last_successfull': True
-                             }
-                        })
-    except Exception as e:
-        logger.error(e)
-        updateStateYML(statepath=config['Global']['statepath'],
-                       **{'DB': {'last_successfull': False}})
-        return 1
 
     try:
+        running = procutils.checkRunning(connstr, PROCNAME)
+    except Exception as e:
+        logger.critical('Couldn\'t obtain information from the database\n' + str(e))
+        return 9
+    if running and not config['Global'].get('forcerun'):
+        logger.critical('The same program is running at this moment. Halting...')
+        return 0
+    log_id = procutils.addLogEntry(connstr, PROCNAME)
+
+    try:
+        logger.info('Obtaining current domain blocklists on unbound daemon')
+        domainUBCSet, wdomainUBCSet = getUnboundLocalDomains(**config['Unbound'])
+
+        logger.info('Fetching restrictions list from DB')
+        domainBlockSet, wdomainBlockSet = restrictions.getBlockedDomainsMerged(connstr)
+
         logger.info('Banning...')
         addDcount = addUnboundZones(**config['Unbound'],
-                        domainset=domainBlockSet.difference(domainUBCSet),
-                        zonetype='static')
+                                    domainset=domainBlockSet.difference(domainUBCSet),
+                                    zonetype='static')
         addWDcount = addUnboundZones(**config['Unbound'],
-                        domainset=wdomainBlockSet.difference(wdomainUBCSet),
-                        zonetype='redirect')
+                                     domainset=wdomainBlockSet.difference(wdomainUBCSet),
+                                     zonetype='redirect')
         logger.info('Unbanning...')
         delDcount = delUnboundZones(**config['Unbound'],
-                        domainset=domainUBCSet.difference(domainBlockSet))
+                                    domainset=domainUBCSet.difference(domainBlockSet))
         delWDcount = delUnboundZones(**config['Unbound'],
-                        domainset=wdomainUBCSet.difference(wdomainBlockSet))
-        updateStateYML(statepath=config['Global']['statepath'],
-                       **{'Unbound':
-                              {'added': addDcount,
-                               'added_wildcard': addWDcount,
-                               'deleted': delDcount,
-                               'deleted_wildcard': delWDcount,
-                               'last_successfull': True
-                               }
-                          })
+                                     domainset=wdomainUBCSet.difference(wdomainBlockSet))
+
+        logger.info('Generating permanent config...')
+        buildUnboundConfig(**config['Unbound'],
+                           domainset=domainBlockSet,
+                           wdomainset=wdomainBlockSet
+                           )
+        result = ['Unbound updates:',
+                  'added: ' + str(addDcount),
+                  'added_wildcard: ' + str(addWDcount),
+                  'deleted: ' + str(delDcount),
+                  'deleted_wildcard: ' + str(delWDcount)
+                  ]
+        logger.info(', '.join(result))
+        procutils.finishJob(connstr, log_id, 0, '\n'.join(result))
+        logger.info('Blocking was finished, enjoy your 1984th')
+
     except Exception as e:
-        logger.critical('Something was going wrong, the violations may occur!')
-        logger.error(e)
-        updateStateYML(statepath=config['Global']['statepath'],
-                       **{'DB': {'last_successfull': False}})
-        return 2
+        procutils.finishJob(connstr, log_id, 1, str(e))
+        logger.error(str(e))
+        return getattr(e, 'errno', 1)
 
-    logger.info('Generating permanent config...')
-    genUnboundConfig(**config['Unbound'],
-                     domainset=domainBlockSet,
-                     wdomainset=wdomainBlockSet
-                     )
-
-    logger.info('Blocking was finished, enjoy your 1984th')
-    updateStateYML(statepath=config['Global']['statepath'],
-                   **{'Program': {'finish_time': str(datetime.now().astimezone())}})
     return 0
 
 

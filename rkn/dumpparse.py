@@ -18,9 +18,8 @@ class RKNDumpFormatException(BaseException):
 #        self.errors = errors
 
 
-# IDNA encoding can fail for too long labels (>63 characters)
-# See: https://en.wikipedia.org/wiki/Internationalized_domain_name
-
+def getLastDumpInfo(connstr):
+    return DataProcessor(connstr).getLastDumpInfo()
 
 
 def parse(dumpfile, connstr):

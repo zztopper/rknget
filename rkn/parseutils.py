@@ -2,7 +2,8 @@ import urllib.parse
 import re
 import ipaddress
 
-
+# IDNA encoding can fail for too long labels (>63 characters)
+# See: https://en.wikipedia.org/wiki/Internationalized_domain_name
 def punencodedom(urlstr):
     return urlstr.encode('idna').decode()
 
