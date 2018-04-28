@@ -208,16 +208,16 @@ def main():
 
         logger.info('Banning...')
         addDcount = addUnboundZones(**config['Unbound'],
-                                    domainset=domainBlockSet.difference(domainUBCSet),
+                                    domainset=domainBlockSet - domainUBCSet,
                                     zonetype='static')
         addWDcount = addUnboundZones(**config['Unbound'],
-                                     domainset=wdomainBlockSet.difference(wdomainUBCSet),
+                                     domainset=wdomainBlockSet - wdomainUBCSet,
                                      zonetype='redirect')
         logger.info('Unbanning...')
         delDcount = delUnboundZones(**config['Unbound'],
-                                    domainset=domainUBCSet.difference(domainBlockSet))
+                                    domainset=domainUBCSet - domainBlockSet)
         delWDcount = delUnboundZones(**config['Unbound'],
-                                     domainset=wdomainUBCSet.difference(wdomainBlockSet))
+                                     domainset=wdomainUBCSet - wdomainBlockSet)
 
         logger.info('Generating permanent config...')
         buildUnboundConfig(**config['Unbound'],
