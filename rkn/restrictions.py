@@ -6,13 +6,28 @@ import ipaddress
 This module only operates with Resources data
 """
 
-def __getBlockedDataSet(connstr, entityname):
+
+def _getBlockedDataSet(connstr, entityname):
     """
     Function for debug purposes
     :param connstr: smth like "engine://user:pswd@host:port/dbname"
     :return: entities set
     """
     return BlockData(connstr).getBlockedResourcesSet(entityname)
+
+
+def getBlockedHTTP(connstr):
+    """
+    :param connstr: smth like "engine://user:pswd@host:port/dbname"
+    """
+    return BlockData(connstr).getBlockedResourcesSet('http')
+
+
+def getBlockedHTTPS(connstr):
+    """
+    :param connstr: smth like "engine://user:pswd@host:port/dbname"
+    """
+    return BlockData(connstr).getBlockedResourcesSet('https')
 
 
 def getBlockedIPsMerged(connstr):
@@ -30,7 +45,7 @@ def getBlockedIPsMerged(connstr):
 
 
 def getBlockedDomainsMerged(connstr):
-    """9
+    """
     We don't need to block domains if the same wildcard domain is blocked
     We don't need to block 3-level wildcard if 2-level wildcard is blocked
     :param connstr: smth like "engine://user:pswd@host:port/dbname"

@@ -20,7 +20,13 @@
     sqlalchemy
 
 Для rkn-unbound:
+    yaml
 
+Для rkn-bird:
+    yaml
+
+Для rkn-f5:
+    yaml
 
 Установка:
 

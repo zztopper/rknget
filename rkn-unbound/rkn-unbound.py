@@ -5,7 +5,6 @@ import yaml
 import logging
 import os
 import subprocess
-from datetime import datetime
 
 sys.path.append('../')
 from rkn import restrictions, procutils

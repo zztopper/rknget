@@ -1,0 +1,54 @@
+Global:
+  tmppath: ./tmp
+  forcerun: True
+
+F5:
+  - host: 127.0.0.1
+    port: 8443
+    secure: true
+    datagroup: rcn_group
+    user: admin
+    password: admin
+    timeout: 60
+  - host: 127.0.0.1
+    port: 9443
+    secure: true
+    datagroup: rcn_group
+    user: admin
+    password: admin
+    timeout: 60
+#  - host: 10.1.1.210
+#    port: 443
+#    secure: true
+#    datagroup: rcn_group
+#    user: rkn
+#    password: FG3xm$0Tdn
+#    timeout: 60
+#  - host: 10.1.1.211
+#    port: 443
+#    secure: true
+#    datagroup: rcn_group
+#    user: rkn
+#    password: FG3xm$0Tdn
+#    timeout: 60
+
+Extra:
+  https: True
+  ip: True
+  ipsubnet: True
+  domain: True
+  domain-mask: True
+
+DB:
+  engine: postgresql
+  host: 10.1.241.154
+  port: 5432
+  dbname: rkndb
+  user: rkn
+  password: hry
+
+Logging:
+  logpath: ./rkn-f5.log
+  stdoutlvl: DEBUG
+  logfilelvl: INFO
+

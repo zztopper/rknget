@@ -5,7 +5,6 @@ import yaml
 import logging
 import os
 import subprocess
-from datetime import datetime
 
 sys.path.append('../')
 from rkn import restrictions, procutils
@@ -82,21 +81,21 @@ def buildConnStr(engine, host, port, dbname, user, password, **kwargs):
            host + ':' + str(port) + '/' + dbname
 
 
-def updateStateYML(statepath, **kwargs):
-    """
-    Considered to merge dicts
-    :param statepath: the path to a file
-    :param kwargs: any state parameters you want
-    """
-    try:
-        state = yaml.load(open(file=statepath, mode='r'))
-        yaml.dump({**state, **kwargs},
-                  open(file=statepath, mode='w'),
-                  default_flow_style=False)
-    except:
-        yaml.dump(kwargs,
-                  open(file=statepath, mode='w'),
-                  default_flow_style=False)
+# def updateStateYML(statepath, **kwargs):
+#     """
+#     Considered to merge dicts
+#     :param statepath: the path to a file
+#     :param kwargs: any state parameters you want
+#     """
+#     try:
+#         state = yaml.load(open(file=statepath, mode='r'))
+#         yaml.dump({**state, **kwargs},
+#                   open(file=statepath, mode='w'),
+#                   default_flow_style=False)
+#     except:
+#         yaml.dump(kwargs,
+#                   open(file=statepath, mode='w'),
+#                   default_flow_style=False)
 
 
 def updateBirdConfig(confpath, stubip, ipsubset, restartcmd, **kwargs):

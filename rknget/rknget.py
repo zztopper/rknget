@@ -92,7 +92,7 @@ def main():
 
     connstr = buildConnStr(**config['DB'])
 
-    createFolders(config['Global']['tmppath'])
+    createFolders(config['Global']['tmpPath'])
 
     try:
         running = procutils.checkRunning(connstr, PROCNAME)
@@ -105,38 +105,40 @@ def main():
     log_id = procutils.addLogEntry(connstr, PROCNAME)
 
     try:
-        dumpinfo = dumpparse.getLastDumpInfo(connstr)
+        if config['Miscellaneous']['uselocaldump']:
+            dumpFile = open(file=config['Global']['dumpPath'],
+                            mode='rb').read()
+        else:
+            # Checking dump info
+            dumpinfo = dumpparse.getLastDumpInfo(connstr)
+            logger.debug('Obtaining dumpfile from ' + config['DumpLoader']['url'])
+            rknSW = rknsoapwrapper.RknSOAPWrapper(**config['DumpLoader'])
+            dumpDate = rknSW.getLastDumpDateEx()
+            if not dumpDate:
+                raise Exception('Couldn\'t obtain dumpdates info', errno=2)
+            if dumpinfo is not None and \
+                dumpinfo['parse_time'].timestamp() > min(dumpDate['lastDumpDate'],
+                                                         dumpDate['lastDumpDateUrgently']):
+                result = 'Last dump is relevant'
+                logger.info(result)
+                # Updating the state in database
+                procutils.finishJob(connstr, log_id, 0, result)
+                return 0
 
-        # Checking dump info
-        logger.debug('Obtaining dumpfile from ' + config['DumpLoader']['url'])
-        rknSW = rknsoapwrapper.RknSOAPWrapper(**config['DumpLoader'])
-        dumpDate = rknSW.getLastDumpDateEx()
-        if not dumpDate:
-            raise Exception('Couldn\'t obtain dumpdates info', errno=2)
-        if dumpinfo is not None and \
-            dumpinfo['parse_time'].timestamp() > min(dumpDate['lastDumpDate'],
-                                                     dumpDate['lastDumpDateUrgently']):
-            result = 'Last dump is relevant'
-            logger.info(result)
-            # Updating the state in database
-            procutils.finishJob(connstr, log_id, 0, result)
-            return 0
-
-        # Obtaining dump file
-        logger.info('Blocklist is outdated, requesting a new dump')
-        dumpFile = rknSW.getDumpFile(open(config['Global']['reqPath'], 'rb').read(),
-                                     open(config['Global']['reqPathSig'], 'rb').read()
-                                     )
-        if config['Global']['savetmp']:
-            open(file=config['Global']['tmppath']+'/dump.xml.zip', mode='wb').write(dumpFile)
-        # If you do wanna use downloaded file, take this instead of 'Loading' block above
-        # dumpFile = open(file=config['Global']['tmppath']+'/dump.xml.zip', mode='rb').read()
+            # Obtaining dump file
+            logger.info('Blocklist is outdated, requesting a new dump')
+            dumpFile = rknSW.getDumpFile(open(config['Global']['reqPath'], 'rb').read(),
+                                         open(config['Global']['reqPathSig'], 'rb').read()
+                                         )
+            if config['Global']['savedump']:
+                open(file=config['Global']['dumpPath'], mode='wb').write(dumpFile)
 
         # Parsing dump file
         dumpparse.parse(dumpFile, connstr)
         # Freeing memory
         del dumpFile
         logger.info('Dump have been parsed to database successfully')
+
         # Blocking
         rowsdict = dict()
         # It may slow down but is safe

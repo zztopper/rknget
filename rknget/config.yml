@@ -1,6 +1,7 @@
 Global:
-  tmppath: ./tmp
-  savetmp: True
+  tmpPath: ./tmp
+  savedump: True
+  dumpPath: ./tmp/dump.xml.zip
   reqPath: ./request.xml
   reqPathSig: ./request.xml.sig
   forcerun: False
@@ -28,12 +29,9 @@ Blocking:
 
 Miscellaneous:
   custom: True
+  uselocaldump: False
 
 Logging:
   logpath: ./rknget.log
   stdoutlvl: INFO
   logfilelvl: INFO
-
-Debug:
-  useTempDump: True
-  useTempData: False
