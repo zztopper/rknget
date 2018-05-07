@@ -114,11 +114,11 @@ def updateF5datagroup(host, port, secure, timeout, datagroup, user, password, ur
         'Content-Type': 'application/json',
         'Content-Length': len(jsondata)
     }
-    conn.request(method='PUT',
-                 url='/mgmt/tm/ltm/data-group/internal/~Common~' + datagroup,
-                 body=jsondata,
-                 headers=headers)
     try:
+        conn.request(method='PUT',
+                     url='/mgmt/tm/ltm/data-group/internal/~Common~' + datagroup,
+                     body=jsondata,
+                     headers=headers)
         resp = conn.getresponse()
     except Exception as e:
         return False, str(e)
@@ -148,11 +148,11 @@ def saveF5config(host, port, secure, timeout, user, password, **kwargs):
         'Content-Length': len(jsondata),
         'Authorization': 'Basic ' + _base64httpcreds(user, password)
     }
-    conn.request(method='POST',
-                 url='/mgmt/tm/sys/config',
-                 body=jsondata,
-                 headers=headers)
     try:
+        conn.request(method='POST',
+                     url='/mgmt/tm/sys/config',
+                     body=jsondata,
+                     headers=headers)
         resp = conn.getresponse()
     except Exception as e:
         return False, str(e)
@@ -192,15 +192,31 @@ def main():
 
         urlsSet = {url.lstrip('http://') for url in restrictions.getBlockedHTTP(connstr)}
 
-        # if config['Extra']['https']:
-        #     for url in restrictions.getBlockedHTTPS(connstr):
-        #         urlsSet.add(url.lstrip('https://'))
-        # if config['Extra']['ip']:
-        #     for url in restrictions.getBlockedHTTPS(connstr):
-        #         urlsSet.add(url.lstrip('https://'))
-        # if config['Extra']['domain']:
-        #     for url in restrictions.getBlockedHTTPS(connstr):
-        #         urlsSet.add(url.lstrip('https://'))
+        if config['Extra']['https']:
+            urlsSet.update(
+                {url.lstrip('https://') for url in restrictions.getBlockedHTTPS(connstr)}
+            )
+        if config['Extra']['domain']:
+            urlsSet.update(
+                restrictions._getBlockedDataSet(connstr, 'domain')
+            )
+        if config['Extra']['domain-mask']:
+            urlsSet.update(
+                restrictions._getBlockedDataSet(connstr, 'domain-mask')
+            )
+        if config['Extra']['ip']:
+            urlsSet.update(
+                restrictions._getBlockedDataSet(connstr, 'ip')
+            )
+        if config['Extra']['ipsubnet']:
+            urlsSet.update(
+                restrictions.getBlockedIPsFromSubnets(connstr)
+            )
+        # Truncating entries if too many.
+        if len(urlsSet) > config['Extra']['truncate-after']:
+            logger.debug('Truncating entries: ' + str(len(urlsSet) - config['Extra']['truncate-after']))
+            urlsSet = list(urlsSet)[-config['Extra']['truncate-after']:]
+
 
         logger.info('Entries being blocked: ' + str(len(urlsSet)))
         logger.info('Updating F5 configuration...')

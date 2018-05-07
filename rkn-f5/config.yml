@@ -1,6 +1,6 @@
 Global:
   tmppath: ./tmp
-  forcerun: True
+  forcerun: False
 
 F5:
   - host: 127.0.0.1
@@ -35,9 +35,10 @@ F5:
 Extra:
   https: True
   ip: True
-  ipsubnet: True
+  ipsubnet: False
   domain: True
   domain-mask: True
+  truncate-after: 200000
 
 DB:
   engine: postgresql

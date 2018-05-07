@@ -30,6 +30,18 @@ def getBlockedHTTPS(connstr):
     return BlockData(connstr).getBlockedResourcesSet('https')
 
 
+def getBlockedIPsFromSubnets(connstr):
+    """
+    Explodes restricted ip subnets into IP list.
+    :param connstr: smth like "engine://user:pswd@host:port/dbname"
+    :return: IP list.
+    """
+    ipsubs = {ipaddress.ip_network(addr)
+              for addr in BlockData(connstr).getBlockedResourcesSet('ipsubnet')}
+
+    return {str(host) for ipsub in ipsubs for host in ipsub.hosts()}
+
+
 def getBlockedIPsMerged(connstr):
     """
     Merges IPs into IP subnets containing first ones.
@@ -40,8 +52,8 @@ def getBlockedIPsMerged(connstr):
     ips = [ipaddress.ip_network(addr) for addr in bldt.getBlockedResourcesSet('ip')]
     ipsubs = [ipaddress.ip_network(addr) for addr in bldt.getBlockedResourcesSet('ipsubnet')]
     ipsall = ips + ipsubs
-    return sum(map(lambda x: x.num_addresses, ipsall)),\
-           set(map(str, ipaddress.collapse_addresses(ipsall)))
+    return set(map(str, ipaddress.collapse_addresses(ipsall))),\
+           sum(map(lambda x: x.num_addresses, ipsall))
 
 
 def getBlockedDomainsMerged(connstr):

@@ -133,7 +133,7 @@ def main():
     try:
         # Fetching ip restrictions
         logger.info('Fetching restrictions list from DB')
-        totalblocked, ipsubSet = restrictions.getBlockedIPsMerged(connstr)
+        ipsubSet, totalblocked = restrictions.getBlockedIPsMerged(connstr)
         logger.info('Updating bird configuration and restarting daemon...')
         # Updating BGP casts
         updateBirdConfig(**config['Bird'],
