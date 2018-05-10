@@ -11,12 +11,12 @@ def _getParamsDict():
 
 def main():
     fields = _getParamsDict()
-    modval = fields.pop('module')
-    metval = fields.pop('method')
-    rawval = fields.pop('raw')
+    modval = fields.pop('module', None)
+    metval = fields.pop('method', None)
+    rawval = fields.pop('raw', None)
     if rawval in (True, 1, 'yes', 'true', 'OK'):
         print("Content-Type: text/plain\r\n\r\n")
-    else
+    else:
         print("Content-type:application/json\r\n\r\n")
     module = __import__(modval, fromlist=[metval])
     fields['connstr'] = connstr
