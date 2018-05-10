@@ -90,4 +90,5 @@ if __name__ == '__main__':
     from dbconn import connstr
 
     fields = cgi.FieldStorage()
-    print( json.dumps(fields['method'](connstr)) )
+    print("Content-type:application/json\r\n\r\n")
+    print(json.dumps(fields['method'](connstr)))
