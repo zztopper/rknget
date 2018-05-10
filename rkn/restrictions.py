@@ -84,3 +84,13 @@ def getBlockedDomainsMerged(connstr):
                 domains.discard(dom)
 
     return domains, wdomains
+
+if main
+    import connstr from some config
+    parse params from self.path
+    using urlparse
+        param method
+        param args
+
+make simple documentation about web api
+
