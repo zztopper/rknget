@@ -1,8 +1,8 @@
 from sqlalchemy import or_, and_
 from sqlalchemy import func
 
-from rkn.db.dataprocessing import DataProcessor
-from rkn.db.scheme import *
+from db.dataprocessing import DataProcessor
+from db.scheme import *
 
 
 class DBOperator(DataProcessor):

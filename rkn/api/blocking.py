@@ -1,4 +1,4 @@
-from rkn.db.resourceblocking import ResourceBlocker
+from db.resourceblocking import ResourceBlocker
 
 
 def unblockResources(connstr):

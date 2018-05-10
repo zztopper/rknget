@@ -3,7 +3,7 @@ import xml.etree.ElementTree
 import io
 
 import parseutils
-from rkn.db.dataprocessing import DataProcessor
+from db.dataprocessing import DataProcessor
 
 
 class RKNDumpFormatException(BaseException):

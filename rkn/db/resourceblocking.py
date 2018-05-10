@@ -1,7 +1,7 @@
 from sqlalchemy import or_, and_
 
-from rkn.db.dbhandler import DatabaseHandler
-from rkn.db.scheme import *
+from db.dbhandler import DatabaseHandler
+from db.scheme import *
 
 
 class ResourceBlocker(DatabaseHandler):

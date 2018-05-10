@@ -1,4 +1,4 @@
-from rkn.db.procdata import ProcData
+from db.procdata import ProcData
 
 """
 This module works with Log

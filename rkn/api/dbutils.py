@@ -1,5 +1,5 @@
-from rkn.db.dbops import DBOperator
-from rkn import parseutils
+from db.dbops import DBOperator
+from api import parseutils
 
 """
 This module provides API for 'rkncli' utility.

@@ -1,4 +1,4 @@
-from rkn.db.blockdata import BlockData
+from db.blockdata import BlockData
 import re
 import ipaddress
 
@@ -84,11 +84,3 @@ def getBlockedDomainsMerged(connstr):
                 domains.discard(dom)
 
     return domains, wdomains
-
-if __name__ == '__main__':
-    import cgi, json
-    from dbconn import connstr
-
-    fields = cgi.FieldStorage()
-    print("Content-type:application/json\r\n\r\n")
-    print(json.dumps(fields['method'](connstr)))
