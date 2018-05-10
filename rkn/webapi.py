@@ -5,16 +5,18 @@ from dbconn import connstr
 
 
 def main():
-    fields = cgi.FieldStorage()
+    fields = dict(cgi.FieldStorage())
+    modval = fields.pop('module')
+    metval = fields.pop('method')
+
     print("Content-type:application/json\r\n\r\n")
-    module = __import__(fields.getvalue('module'),
-                        fromlist=[fields.getvalue('method')])
+    module = __import__(modval, fromlist=[metval])
+    fields['connstr'] = connstr
 
     print(
         json.dumps(
-            getattr(module,
-                    fields.getvalue('method'))
-            (connstr)
+            getattr(module, metval)
+            (**fields)
         )
     )
     return 0

@@ -74,12 +74,6 @@ def createFolders(*args):
             pass
 
 
-def buildConnStr(engine, host, port, dbname, user, password, **kwargs):
-    return engine + '://' + \
-           user + ':' + password + '@' + \
-           host + ':' + str(port) + '/' + dbname
-
-
 def main():
     configPath = confpath_argv()
     if configPath is None:
