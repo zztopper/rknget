@@ -5,8 +5,9 @@ import yaml
 import logging
 import os
 
+import rknsoapwrapper
 sys.path.append('../')
-from rkn import rknsoapwrapper, dumpparse, blocking, procutils
+from rkn import dumpparse, blocking, procutils
 
 CONFIG_PATH = 'config.yml'
 
@@ -32,7 +33,7 @@ def print_help():
     print('Usage: ' + sys.argv[0] + ' (with ./config.yml)\n' +
           'Usage: ' + sys.argv[0] + ' -c [CONFIG PATH]')
 
-
+<
 # Importing configuration
 def initConf(configpath):
     """

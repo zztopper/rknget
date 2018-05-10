@@ -2,7 +2,7 @@
 
 
 import rknget
-from rkn import rknstatehandler, rknsoapwrapper, dumpparse
+from rkn import rknsoapwrapper, dumpparse
 
 
 # Testing

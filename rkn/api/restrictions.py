@@ -85,12 +85,9 @@ def getBlockedDomainsMerged(connstr):
 
     return domains, wdomains
 
-if main
-    import connstr from some config
-    parse params from self.path
-    using urlparse
-        param method
-        param args
+if __name__ == '__main__':
+    import cgi, json
+    from dbconn import connstr
 
-make simple documentation about web api
-
+    fields = cgi.FieldStorage()
+    print( json.dumps(fields['method'](connstr)) )

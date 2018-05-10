@@ -2,7 +2,7 @@ import zipfile
 import xml.etree.ElementTree
 import io
 
-import rkn.parseutils
+import parseutils
 from rkn.db.dataprocessing import DataProcessor
 
 
