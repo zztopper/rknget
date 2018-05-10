@@ -14,19 +14,17 @@ def main():
     modval = fields.pop('module', None)
     metval = fields.pop('method', None)
     rawval = fields.pop('raw', None)
-    if rawval in (True, 1, 'yes', 'true', 'OK'):
-        print("Content-Type: text/plain\r\n\r\n")
-    else:
-        print("Content-type:application/json\r\n\r\n")
     module = __import__(modval, fromlist=[metval])
     fields['connstr'] = connstr
+    data = getattr(module, metval)(**fields)
 
-    print(
-        json.dumps(
-            getattr(module, metval)
-            (**fields)
-        )
-    )
+    if rawval in ('True', '1', 'yes', 'true', 'OK'):
+        print("Content-Type: text/plain\r\n\r\n")
+        print(str(data))
+    else:
+        print("Content-type:application/json\r\n\r\n")
+        print(json.dumps(data))
+
     return 0
 
 
