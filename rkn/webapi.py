@@ -4,8 +4,13 @@ import json
 from dbconn import connstr
 
 
+def _getParamsDict():
+    fields = cgi.FieldStorage()
+    return {key: fields.getvalue(key) for key in fields.keys()}
+
+
 def main():
-    fields = dict(cgi.FieldStorage())
+    fields = _getParamsDict()
     modval = fields.pop('module')
     metval = fields.pop('method')
 
