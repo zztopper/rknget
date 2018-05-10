@@ -6,8 +6,8 @@ from dbconn import connstr
 def main():
     fields = cgi.FieldStorage()
     print("Content-type:application/json\r\n\r\n")
-    __import__(fields['module'])
-    print(json.dumps(fields['method'](connstr)))
+    __import__(fields.getvalue('module'))
+    print(json.dumps(fields.getvalue('method'))(connstr))
     return 0
 
 
