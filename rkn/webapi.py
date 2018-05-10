@@ -8,7 +8,13 @@ def main():
     print("Content-type:application/json\r\n\r\n")
     __import__(fields.getvalue('module'))
 
-    print(json.dumps(fields.getvalue('method')(connstr)))
+    print(
+        json.dumps(
+            getattr(fields.getvalue('module'),
+                    fields.getvalue('method'))
+            (connstr)
+        )
+    )
     return 0
 
 
