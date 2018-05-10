@@ -17,8 +17,9 @@ class BlockData(DatabaseHandler):
         :param entitytype: resource entitytype
         :return: query
         """
+        # Distinct is not needed for set()
+        # distinct(Resource.value). \
         return self._session.query(Resource.value). \
-            distinct(Resource.value). \
             join(Entitytype, Resource.entitytype_id == Entitytype.id). \
             filter(Entitytype.name == entityname). \
             filter(Resource.is_blocked == True)

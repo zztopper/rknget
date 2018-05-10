@@ -4,30 +4,33 @@ import ipaddress
 
 """
 This module only operates with Resources data
+I had to switch returned datasets to list to make those json serialisable
 """
 
 
-def _getBlockedDataSet(connstr, entityname):
+def _getBlockedDataList(connstr, entityname):
     """
     Function for debug purposes
     :param connstr: smth like "engine://user:pswd@host:port/dbname"
     :return: entities set
     """
-    return BlockData(connstr).getBlockedResourcesSet(entityname)
+    return list(BlockData(connstr).getBlockedResourcesSet(entityname))
 
 
 def getBlockedHTTP(connstr):
     """
     :param connstr: smth like "engine://user:pswd@host:port/dbname"
+    :return URLs strings list
     """
-    return BlockData(connstr).getBlockedResourcesSet('http')
+    return list(BlockData(connstr).getBlockedResourcesSet('http'))
 
 
 def getBlockedHTTPS(connstr):
     """
     :param connstr: smth like "engine://user:pswd@host:port/dbname"
+    :return URLs strings list
     """
-    return BlockData(connstr).getBlockedResourcesSet('https')
+    return list(BlockData(connstr).getBlockedResourcesSet('https'))
 
 
 def getBlockedIPsFromSubnets(connstr):
@@ -39,20 +42,20 @@ def getBlockedIPsFromSubnets(connstr):
     ipsubs = {ipaddress.ip_network(addr)
               for addr in BlockData(connstr).getBlockedResourcesSet('ipsubnet')}
 
-    return {str(host) for ipsub in ipsubs for host in ipsub.hosts()}
+    return [str(host) for ipsub in ipsubs for host in ipsub.hosts()]
 
 
 def getBlockedIPsMerged(connstr):
     """
     Merges IPs into IP subnets containing first ones.
     :param connstr: smth like "engine://user:pswd@host:port/dbname"
-    :return: The total and the set of ip subnets, using /32 for ips.
+    :return: The total and the list of ip subnets, using /32 for ips.
     """
     bldt = BlockData(connstr)
     ips = [ipaddress.ip_network(addr) for addr in bldt.getBlockedResourcesSet('ip')]
     ipsubs = [ipaddress.ip_network(addr) for addr in bldt.getBlockedResourcesSet('ipsubnet')]
     ipsall = ips + ipsubs
-    return set(map(str, ipaddress.collapse_addresses(ipsall))),\
+    return list(map(str, ipaddress.collapse_addresses(ipsall))),\
            sum(map(lambda x: x.num_addresses, ipsall))
 
 
@@ -83,4 +86,4 @@ def getBlockedDomainsMerged(connstr):
                 # Using discard to ignore redelete.
                 domains.discard(dom)
 
-    return domains, wdomains
+    return list(domains), list(wdomains)

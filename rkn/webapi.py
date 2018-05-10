@@ -3,10 +3,12 @@ import cgi
 import json
 from dbconn import connstr
 
+
 def main():
     fields = cgi.FieldStorage()
     print("Content-type:application/json\r\n\r\n")
-    module = __import__(fields.getvalue('module'))
+    module = __import__(fields.getvalue('module'),
+                        fromlist=[fields.getvalue('method')])
 
     print(
         json.dumps(

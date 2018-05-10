@@ -2,7 +2,7 @@ import zipfile
 import xml.etree.ElementTree
 import io
 
-import parseutils
+import api.parseutils
 from db.dataprocessing import DataProcessor
 
 
@@ -114,3 +114,5 @@ def parse(dumpfile, connstr):
     dataproc.setDumpParsed(dump_id)
 
     dataproc.commitclose()
+
+    return True
