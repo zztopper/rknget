@@ -1,7 +1,10 @@
 import xml.etree.ElementTree
+import io
+import zipfile
+
 from datetime import datetime
 
-import api.parseutils
+import parseutils
 from db.dataprocessing import DataProcessor
 
 
@@ -28,6 +31,11 @@ def parsedRecently(update_time, connstr):
     if parsed_time:
         return parsed_time.timestamp() > float(update_time)
     return False
+
+
+def parse_zip(dumpzip, connstr):
+    xmldump = zipfile.ZipFile(io.BytesIO(bytes(dumpzip))).read('dump.xml')
+    return parse(xmldump, connstr)
 
 
 def parse(xmldump, connstr):
@@ -83,28 +91,28 @@ def parse(xmldump, connstr):
                         entitytype = 'https'
                     else:
                         entitytype = 'http'
-                    value = rkn.parseutils.urlHandler(element.text)
+                    value = parseutils.urlHandler(element.text)
                 elif tag == 'domain':
                     # Why wouldn't be used content.attrib['blockType'] instead?
                     # Because domain tags don't depend on content blocktype.
-                    if not rkn.parseutils.isdomain(element.text):
+                    if not parseutils.isdomain(element.text):
                         continue
                     if '*.' in str(element.text):
                         entitytype = 'domain-mask'
                         # Truncating *.
-                        value = rkn.parseutils.punencodedom(
-                            rkn.parseutils.domainCorrect(element.text)[2:])
+                        value = parseutils.punencodedom(
+                            parseutils.domainCorrect(element.text)[2:])
                     else:
                         entitytype = 'domain'
-                        value = rkn.parseutils.punencodedom(
-                            rkn.parseutils.domainCorrect(element.text))
+                        value = parseutils.punencodedom(
+                            parseutils.domainCorrect(element.text))
                 elif tag == 'ip':
-                    if not rkn.parseutils.isip(element.text):
+                    if not parseutils.isip(element.text):
                         continue
                     entitytype = 'ip'
                     value = element.text
                 elif tag == 'ipSubnet':
-                    if not rkn.parseutils.isipsub(element.text):
+                    if not parseutils.isipsub(element.text):
                         continue
                     entitytype = 'ipsubnet'
                     value = element.text

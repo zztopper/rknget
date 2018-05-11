@@ -4,8 +4,6 @@ import sys
 import yaml
 import logging
 import os
-import io
-import zipfile
 
 import rknsoapwrapper
 sys.path.append('../')
@@ -145,16 +143,14 @@ def main():
                 open(file=config['Global']['dumpPath'], mode='wb').write(dumpFile)
 
         # Parsing dump file
-        xmldump = zipfile.ZipFile(io.BytesIO(dumpFile)).read('dump.xml')
-        # Freeing memory
-        del dumpFile
+        logger.info('Parsing dump file...')
         webconn.call(**config['API'],
                      module='api.dumpparse',
                      method='parse',
-                     xmldump=xmldump
+                     dumpzip=dumpFile
                      )
         # Freeing memory
-        del xmldump
+        del dumpFile
         logger.info('Dump have been parsed to database successfully')
 
         # # Blocking
