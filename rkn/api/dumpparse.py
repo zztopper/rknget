@@ -1,6 +1,4 @@
-import zipfile
 import xml.etree.ElementTree
-import io
 from datetime import datetime
 
 import api.parseutils
@@ -22,25 +20,24 @@ class RKNDumpFormatException(BaseException):
 def parsedRecently(update_time, connstr):
     """
     Checks if dump info becomes obsolete
-    :param update_time: dump update time in ms
+    :param update_time: dump update time in seconds
     :param connstr: smth like "engine://user:pswd@host:port/dbname"
     :return:
     """
     parsed_time = DataProcessor(connstr).getLastParsedTime()
     if parsed_time:
-        return parsed_time.timestamp() > float(update_time_ms)
+        return parsed_time.timestamp() > float(update_time)
     return False
 
 
-def parse(dumpfile, connstr):
+def parse(xmldump, connstr):
     """
-    :param dumpfile: binary loaded file in ram
+    :param xmldump: dump.xml
     :param connstr: smth like "engine://user:pswd@host:port/dbname"
     Parses xml from binary dump has been loaded on init.
     Has much hardcode caused by shitty dump format
 
     """
-    xmldump = zipfile.ZipFile(io.BytesIO(dumpfile)).read('dump.xml')
     xmlroot = xml.etree.ElementTree.XML(xmldump)
     dataproc = DataProcessor(connstr)
 

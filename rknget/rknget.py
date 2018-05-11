@@ -4,6 +4,8 @@ import sys
 import yaml
 import logging
 import os
+import io
+import zipfile
 
 import rknsoapwrapper
 sys.path.append('../')
@@ -88,7 +90,7 @@ def main():
     createFolders(config['Global']['tmpPath'])
 
     try:
-        running = webconn.getData(**config['API'],
+        running = webconn.call(**config['API'],
                               module='api.procutils',
                               method='checkRunning',
                               procname=PROCNAME)
@@ -98,7 +100,7 @@ def main():
     if running and not config['Global'].get('forcerun'):
         logger.critical('The same program is running at this moment. Halting...')
         return 0
-    log_id = webconn.getData(**config['API'],
+    log_id = webconn.call(**config['API'],
                          module='api.procutils',
                          method='addLogEntry',
                          procname=PROCNAME)
@@ -117,16 +119,21 @@ def main():
 
             update_time = max(dumpDate['lastDumpDate'],
                               dumpDate['lastDumpDateUrgently'])/1000
-            # parsed_recently = webconn.getData(**config['API'],
-            #                      module='api.dumpparse',
-            #                      method='parsedRecently',
-            #                      update_time=update_time)
+            parsed_recently = webconn.call(**config['API'],
+                                 module='api.dumpparse',
+                                 method='parsedRecently',
+                                 update_time=update_time)
 
             if parsed_recently:
                 result = 'Last dump is relevant'
                 logger.info(result)
                 # Updating the state in database
-                procutils.finishJob(connstr, log_id, 0, result)
+                webconn.call(**config['API'],
+                                module='api.procutils',
+                                method='finishJob',
+                                log_id=log_id,
+                                exit_code=0,
+                                result=result)
                 return 0
 
             # Obtaining dump file
@@ -138,34 +145,41 @@ def main():
                 open(file=config['Global']['dumpPath'], mode='wb').write(dumpFile)
 
         # Parsing dump file
-        dumpparse.parse(dumpFile, connstr)
+        xmldump = zipfile.ZipFile(io.BytesIO(dumpFile)).read('dump.xml')
         # Freeing memory
         del dumpFile
+        webconn.call(**config['API'],
+                     module='api.dumpparse',
+                     method='parse',
+                     xmldump=xmldump
+                     )
+        # Freeing memory
+        del xmldump
         logger.info('Dump have been parsed to database successfully')
 
-        # Blocking
-        rowsdict = dict()
-        # It may slow down but is safe
-        blocking.unblockResources(connstr)
-        # Fairly blocking first
-        logger.debug('Blocking fairly (as is)')
-        rows = blocking.blockResourcesFairly(connstr)
-        rowsdict['fairly'] = rows
-        logger.info('Blocked fairly ' + str(rows) + ' rows')
-        for src, dst in config['Blocking']:
-            logger.info('Blocking ' + str(dst) + ' from ' + str(src))
-            rows = blocking.blockResourcesExcessively(connstr, src, dst)
-            if rows is not None:
-                logger.info('Blocked ' + str(rows) + ' rows')
-                rowsdict[str(dst) + '->' + str(src)] = rows
-            else:
-                logger.warning('Nothing have been blocked from' + str(src) + ' to ' + str(dst))
-        # Blocking custom resouces
-        if config['Miscellaneous']['custom']:
-            logger.info('Blocking custom resources')
-            rows = blocking.blockCustom(connstr)
-            logger.info('Blocked ' + str(rows))
-            rowsdict['Custom'] = rows
+        # # Blocking
+        # rowsdict = dict()
+        # # It may slow down but is safe
+        # blocking.unblockResources(connstr)
+        # # Fairly blocking first
+        # logger.debug('Blocking fairly (as is)')
+        # rows = blocking.blockResourcesFairly(connstr)
+        # rowsdict['fairly'] = rows
+        # logger.info('Blocked fairly ' + str(rows) + ' rows')
+        # for src, dst in config['Blocking']:
+        #     logger.info('Blocking ' + str(dst) + ' from ' + str(src))
+        #     rows = blocking.blockResourcesExcessively(connstr, src, dst)
+        #     if rows is not None:
+        #         logger.info('Blocked ' + str(rows) + ' rows')
+        #         rowsdict[str(dst) + '->' + str(src)] = rows
+        #     else:
+        #         logger.warning('Nothing have been blocked from' + str(src) + ' to ' + str(dst))
+        # # Blocking custom resouces
+        # if config['Miscellaneous']['custom']:
+        #     logger.info('Blocking custom resources')
+        #     rows = blocking.blockCustom(connstr)
+        #     logger.info('Blocked ' + str(rows))
+        #     rowsdict['Custom'] = rows
 
         # Updating the state in the database
         result = 'Blocking results\n' + '\n'.join(k + ':' + str(v) for k,v in rowsdict.items())
@@ -173,7 +187,7 @@ def main():
         logger.info('Blocking was finished, enjoy your 1984th')
 
     except Exception as e:
-        webconn.getData(**config['API'],
+        webconn.call(**config['API'],
                     module='api.procutils',
                     method='finishJob',
                     log_id=log_id,

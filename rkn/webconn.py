@@ -10,7 +10,7 @@ def _base64httpcreds(user, password):
     return base64.b64encode((str(user) + ':' + str(password)).encode()).decode('ascii')
 
 
-def getData(host, port, secure, url,
+def call(host, port, secure, url,
             module, method,
             timeout=60, user=None, password=None,
             **params):
