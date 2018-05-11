@@ -17,6 +17,7 @@ def main():
     rawval = fields.pop('raw', None)
     module = __import__(modval, fromlist=[metval])
     fields['connstr'] = connstr
+    # Shoot your leg through!!!
     data = getattr(module, metval)(**fields)
 
     if rawval in ('True', '1', 'yes', 'true', 'OK'):

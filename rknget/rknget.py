@@ -4,10 +4,11 @@ import sys
 import yaml
 import logging
 import os
+from datetime import datetime
 
 import rknsoapwrapper
 sys.path.append('../')
-from rkn import api
+from rkn import webconn
 
 CONFIG_PATH = 'config.yml'
 
@@ -88,7 +89,7 @@ def main():
     createFolders(config['Global']['tmpPath'])
 
     try:
-        running = api.getData(**config['API'],
+        running = webconn.getData(**config['API'],
                               module='api.procutils',
                               method='checkRunning',
                               procname=PROCNAME)
@@ -98,7 +99,7 @@ def main():
     if running and not config['Global'].get('forcerun'):
         logger.critical('The same program is running at this moment. Halting...')
         return 0
-    log_id = api.getData(**config['API'],
+    log_id = webconn.getData(**config['API'],
                          module='api.procutils',
                          method='addLogEntry',
                          procname=PROCNAME)
@@ -108,17 +109,22 @@ def main():
                             mode='rb').read()
         else:
             # Checking dump info
-            dumpinfo = api.getData(**config['API'],
-                                 module='api.dumpparse',
-                                 method='getLastDumpInfo')
+
             logger.debug('Obtaining dumpfile from ' + config['DumpLoader']['url'])
             rknSW = rknsoapwrapper.RknSOAPWrapper(**config['DumpLoader'])
             dumpDate = rknSW.getLastDumpDateEx()
             if not dumpDate:
                 raise Exception('Couldn\'t obtain dumpdates info', errno=2)
-            if dumpinfo is not None and \
-                dumpinfo['parse_time'].timestamp() > min(dumpDate['lastDumpDate'],
-                                                         dumpDate['lastDumpDateUrgently']):
+
+            update_time = datetime.datetime.fromtimestamp(
+                max(dumpDate['lastDumpDate'],
+                    dumpDate['lastDumpDateUrgently']))
+            parsed_recently = webconn.getData(**config['API'],
+                                 module='api.dumpparse',
+                                 method='parsedRecently',
+                                 update_time=update_time)
+
+            if parsed_recently:
                 result = 'Last dump is relevant'
                 logger.info(result)
                 # Updating the state in database
@@ -169,7 +175,7 @@ def main():
         logger.info('Blocking was finished, enjoy your 1984th')
 
     except Exception as e:
-        api.getData(**config['API'],
+        webconn.getData(**config['API'],
                     module='api.procutils',
                     method='finishJob',
                     log_id=log_id,

@@ -36,19 +36,17 @@ class DataProcessor(DatabaseHandler):
         self._entitytypeDict = self._getNameIDMapping(Entitytype)
         self._orgDict = self._getNameIDMapping(Organisation)
 
-    def getLastDumpInfo(self):
+    def getLastParsedTime(self):
         """
         Returns the last dump state. If no entries, empty dict.
-        :return: dict column->value or dict().
+        :return: datetime value
         """
-        row = self._session.query(DumpInfo). \
+        row = self._session.query(DumpInfo.parse_time). \
+            filter_by(parsed=True). \
             order_by(DumpInfo.id.desc()).first()
-        fields = DumpInfo.__table__.columns.keys()
         if row is None:
             return None
-        return {
-            f: getattr(row, f) for f in fields
-        }
+        return row.parse_time
 
     def addDumpInfoRecord(self, updateTime, updateTimeUrgently, **kwargs):
         """
