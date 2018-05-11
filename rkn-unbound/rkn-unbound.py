@@ -7,7 +7,7 @@ import os
 import subprocess
 
 sys.path.append('../')
-from rkn import restrictions, procutils
+from rkn import webconn
 
 CONFIG_PATH = 'config.yml'
 
@@ -72,12 +72,6 @@ def createFolders(*args):
             os.makedirs(path, mode=0o755, exist_ok=True)
         finally:
             pass
-
-
-def buildConnStr(engine, host, port, dbname, user, password, **kwargs):
-    return engine + '://' + \
-           user + ':' + password + '@' + \
-           host + ':' + str(port) + '/' + dbname
 
 
 def getUnboundLocalDomains(binarypath, stubip, **kwargs):
@@ -186,24 +180,35 @@ def main():
     logger.debug('Successfully started at with config:\n' + str(config))
     createFolders(config['Global']['tmppath'])
 
-    connstr = buildConnStr(**config['DB'])
-
     try:
-        running = procutils.checkRunning(connstr, PROCNAME)
+        running = webconn.call(**config['API'],
+                               module='api.procutils',
+                               method='checkRunning',
+                               procname=PROCNAME)
     except Exception as e:
-        logger.critical('Couldn\'t obtain information from the database\n' + str(e))
-        return 9
+            logger.critical('Couldn\'t obtain information from the database\n' + str(e))
+            return 9
     if running and not config['Global'].get('forcerun'):
         logger.critical('The same program is running at this moment. Halting...')
         return 0
-    log_id = procutils.addLogEntry(connstr, PROCNAME)
+    # Getting PID
+    log_id = webconn.call(**config['API'],
+                          module='api.procutils',
+                          method='addLogEntry',
+                          procname=PROCNAME)
 
     try:
         logger.info('Obtaining current domain blocklists on unbound daemon')
         domainUBCSet, wdomainUBCSet = getUnboundLocalDomains(**config['Unbound'])
 
         logger.info('Fetching restrictions list from DB')
-        domainBlockSet, wdomainBlockSet = restrictions.getBlockedDomainsMerged(connstr)
+        domainBlockSet,\
+        wdomainBlockSet = webconn.call(**config['API'],
+                                       module='api.restrictions',
+                                       method='getBlockedDomainsMerged')
+        # Lists were got, transforming
+        domainBlockSet = set(domainBlockSet)
+        wdomainBlockSet = set(wdomainBlockSet)
 
         logger.info('Banning...')
         addDcount = addUnboundZones(**config['Unbound'],
@@ -230,11 +235,21 @@ def main():
                   'deleted_wildcard: ' + str(delWDcount)
                   ]
         logger.info(', '.join(result))
-        procutils.finishJob(connstr, log_id, 0, '\n'.join(result))
+        webconn.call(**config['API'],
+                     module='api.procutils',
+                     method='finishJob',
+                     log_id=log_id,
+                     exit_code=0,
+                     result='\n'.join(result))
         logger.info('Blocking was finished, enjoy your 1984th')
 
     except Exception as e:
-        procutils.finishJob(connstr, log_id, 1, str(e))
+        webconn.call(**config['API'],
+                     module='api.procutils',
+                     method='finishJob',
+                     log_id=log_id,
+                     exit_code=1,
+                     result=str(e))
         logger.error(str(e))
         return getattr(e, 'errno', 1)
 

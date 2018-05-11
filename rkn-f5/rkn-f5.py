@@ -10,7 +10,7 @@ import json
 import ssl
 
 sys.path.append('../')
-from rkn import restrictions, procutils
+from rkn import webconn
 
 CONFIG_PATH = 'config.yml'
 
@@ -76,12 +76,6 @@ def createFolders(*args):
             os.makedirs(path, mode=0o755, exist_ok=True)
         finally:
             pass
-
-
-def buildConnStr(engine, host, port, dbname, user, password, **kwargs):
-    return engine + '://' + \
-           user + ':' + password + '@' + \
-           host + ':' + str(port) + '/' + dbname
 
 
 def _base64httpcreds(user, password):
@@ -174,49 +168,71 @@ def main():
     logger.debug('Successfully started at with config:\n' + str(config))
     createFolders(config['Global']['tmppath'])
 
-    connstr = buildConnStr(**config['DB'])
-
     try:
-        running = procutils.checkRunning(connstr, PROCNAME)
+        running = webconn.call(**config['API'],
+                               module='api.procutils',
+                               method='checkRunning',
+                               procname=PROCNAME)
     except Exception as e:
-        logger.critical('Couldn\'t obtain information from the database\n' + str(e))
-        return 9
+            logger.critical('Couldn\'t obtain information from the database\n' + str(e))
+            return 9
     if running and not config['Global'].get('forcerun'):
         logger.critical('The same program is running at this moment. Halting...')
         return 0
-    log_id = procutils.addLogEntry(connstr, PROCNAME)
+    # Getting PID
+    log_id = webconn.call(**config['API'],
+                          module='api.procutils',
+                          method='addLogEntry',
+                          procname=PROCNAME)
 
     try:
         # Fetching http restrictions
         logger.info('Fetching restrictions list from DB')
 
-        urlsSet = {url.lstrip('http://') for url in restrictions.getBlockedHTTP(connstr)}
-
+        urlsSet = {url.lstrip('http://') for url in
+                   webconn.call(**config['API'],
+                                module='api.restrictions',
+                                method='getBlockedHTTP')
+                   }
         if config['Extra']['https']:
             urlsSet.update(
-                {url.lstrip('https://') for url in restrictions.getBlockedHTTPS(connstr)}
+                {url.lstrip('https://') for url in
+                 webconn.call(**config['API'],
+                              module='api.restrictions',
+                              method='getBlockedHTTPS')
+                 }
             )
         if config['Extra']['domain']:
             urlsSet.update(
-                restrictions._getBlockedDataSet(connstr, 'domain')
+                webconn.call(**config['API'],
+                             module='api.restrictions',
+                             method='_getBlockedDataList',
+                             entityname='domain')
             )
         if config['Extra']['domain-mask']:
             urlsSet.update(
-                restrictions._getBlockedDataSet(connstr, 'domain-mask')
+                webconn.call(**config['API'],
+                             module='api.restrictions',
+                             method='_getBlockedDataList',
+                             entityname='domain-mask')
             )
         if config['Extra']['ip']:
             urlsSet.update(
-                restrictions._getBlockedDataSet(connstr, 'ip')
+                webconn.call(**config['API'],
+                             module='api.restrictions',
+                             method='_getBlockedDataList',
+                             entityname='ip')
             )
         if config['Extra']['ipsubnet']:
             urlsSet.update(
-                restrictions.getBlockedIPsFromSubnets(connstr)
+                webconn.call(**config['API'],
+                             module='api.restrictions',
+                             method='getBlockedIPsFromSubnets')
             )
         # Truncating entries if too many.
         if len(urlsSet) > config['Extra']['truncate-after']:
             logger.debug('Truncating entries: ' + str(len(urlsSet) - config['Extra']['truncate-after']))
             urlsSet = list(urlsSet)[-config['Extra']['truncate-after']:]
-
 
         logger.info('Entries being blocked: ' + str(len(urlsSet)))
         logger.info('Updating F5 configuration...')
@@ -244,11 +260,21 @@ def main():
             result.append(res)
 
         # Updating the state in the database
-        procutils.finishJob(connstr, log_id, 0, '\n'.join(result))
+        webconn.call(**config['API'],
+                     module='api.procutils',
+                     method='finishJob',
+                     log_id=log_id,
+                     exit_code=0,
+                     result='\n'.join(result))
         logger.info('Blocking was finished, enjoy your 1984th')
 
     except Exception as e:
-        procutils.finishJob(connstr, log_id, 1, str(e))
+        webconn.call(**config['API'],
+                     module='api.procutils',
+                     method='finishJob',
+                     log_id=log_id,
+                     exit_code=1,
+                     result=str(e))
         logger.error(str(e))
         return getattr(e, 'errno', 1)
 

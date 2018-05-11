@@ -55,8 +55,8 @@ def getBlockedIPsMerged(connstr):
     ips = [ipaddress.ip_network(addr) for addr in bldt.getBlockedResourcesSet('ip')]
     ipsubs = [ipaddress.ip_network(addr) for addr in bldt.getBlockedResourcesSet('ipsubnet')]
     ipsall = ips + ipsubs
-    return list(map(str, ipaddress.collapse_addresses(ipsall))),\
-           sum(map(lambda x: x.num_addresses, ipsall))
+    return [list(map(str, ipaddress.collapse_addresses(ipsall))),
+            sum(map(lambda x: x.num_addresses, ipsall))]
 
 
 def getBlockedDomainsMerged(connstr):
@@ -86,4 +86,4 @@ def getBlockedDomainsMerged(connstr):
                 # Using discard to ignore redelete.
                 domains.discard(dom)
 
-    return list(domains), list(wdomains)
+    return [list(domains), list(wdomains)]

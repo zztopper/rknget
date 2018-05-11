@@ -7,7 +7,7 @@ import os
 import subprocess
 
 sys.path.append('../')
-from rkn import restrictions, procutils
+from rkn import webconn
 
 CONFIG_PATH = 'config.yml'
 
@@ -75,12 +75,6 @@ def createFolders(*args):
             pass
 
 
-def buildConnStr(engine, host, port, dbname, user, password, **kwargs):
-    return engine + '://' + \
-           user + ':' + password + '@' + \
-           host + ':' + str(port) + '/' + dbname
-
-
 # def updateStateYML(statepath, **kwargs):
 #     """
 #     Considered to merge dicts
@@ -98,9 +92,9 @@ def buildConnStr(engine, host, port, dbname, user, password, **kwargs):
 #                   default_flow_style=False)
 
 
-def updateBirdConfig(confpath, stubip, ipsubset, restartcmd, **kwargs):
+def updateBirdConfig(confpath, stubip, ipsublist, restartcmd, **kwargs):
     configfile = open(file=confpath, mode='w')
-    for ipsub in ipsubset:
+    for ipsub in ipsublist:
         configfile.write('route ' + ipsub + ' via ' + stubip + ';\n')
     configfile.close()
     subprocess.call(restartcmd.split(' '), shell=True)
@@ -118,35 +112,53 @@ def main():
     logger.debug('Successfully started at with config:\n' + str(config))
     createFolders(config['Global']['tmppath'])
 
-    connstr = buildConnStr(**config['DB'])
-
     try:
-        running = procutils.checkRunning(connstr, PROCNAME)
+        running = webconn.call(**config['API'],
+                               module='api.procutils',
+                               method='checkRunning',
+                               procname=PROCNAME)
     except Exception as e:
-        logger.critical('Couldn\'t obtain information from the database\n' + str(e))
-        return 9
+            logger.critical('Couldn\'t obtain information from the database\n' + str(e))
+            return 9
     if running and not config['Global'].get('forcerun'):
         logger.critical('The same program is running at this moment. Halting...')
         return 0
-    log_id = procutils.addLogEntry(connstr, PROCNAME)
+    # Getting PID
+    log_id = webconn.call(**config['API'],
+                          module='api.procutils',
+                          method='addLogEntry',
+                          procname=PROCNAME)
 
     try:
         # Fetching ip restrictions
         logger.info('Fetching restrictions list from DB')
-        ipsubSet, totalblocked = restrictions.getBlockedIPsMerged(connstr)
+        ipsublist, totalblocked = webconn.call(**config['API'],
+                                               module='api.restrictions',
+                                               method='getBlockedIPsMerged')
         logger.info('Updating bird configuration and restarting daemon...')
         # Updating BGP casts
         updateBirdConfig(**config['Bird'],
-                         ipsubset=ipsubSet)
+                         ipsublist=ipsublist)
         # Updating the state in the database
         result = [str(totalblocked) + ' ip entries are routed to blackhole',
-                  str(len(ipsubSet)) + ' entries are announced by BGP daemon']
+                  str(len(ipsublist)) + ' entries are announced by BGP daemon']
         logger.info(', '.join(result))
-        procutils.finishJob(connstr, log_id, 0, '\n'.join(result))
+        # Updating the state in the database
+        webconn.call(**config['API'],
+                     module='api.procutils',
+                     method='finishJob',
+                     log_id=log_id,
+                     exit_code=0,
+                     result='\n'.join(result))
         logger.info('Blocking was finished, enjoy your 1984th')
 
     except Exception as e:
-        procutils.finishJob(connstr, log_id, 1, str(e))
+        webconn.call(**config['API'],
+                     module='api.procutils',
+                     method='finishJob',
+                     log_id=log_id,
+                     exit_code=1,
+                     result=str(e))
         logger.error(str(e))
         return getattr(e, 'errno', 1)
 

@@ -7,13 +7,12 @@ Bird:
   confpath: ./bird-rkn.conf
   stubip: 1.1.1.1
 
-DB:
-  engine: postgresql
+API:
   host: 10.1.241.154
-  port: 5432
-  dbname: rkndb
-  user: rkn
-  password: hry
+  port: 80
+  url: /cgi-bin/rknget/rkn/webapi.py
+  secure: false
+  timeout: 720
 
 Logging:
   logpath: ./rkn-bird.log

@@ -28,7 +28,7 @@ Blocking:
 
 Miscellaneous:
   custom: True
-  uselocaldump: True
+  uselocaldump: False
 
 Logging:
   logpath: ./rknget.log
