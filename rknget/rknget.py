@@ -4,6 +4,8 @@ import sys
 import yaml
 import logging
 import os
+import io
+import zipfile
 
 import rknsoapwrapper
 sys.path.append('../')
@@ -144,13 +146,17 @@ def main():
 
         # Parsing dump file
         logger.info('Parsing dump file...')
+        xmldump = zipfile.ZipFile(io.BytesIO(dumpFile)).read('dump.xml')
+        # Freeing memory
+        del dumpFile
+
         webconn.call(**config['API'],
                      module='api.dumpparse',
                      method='parse',
-                     dumpzip=dumpFile
+                     xmldump=xmldump
                      )
         # Freeing memory
-        del dumpFile
+        del xmldump
         logger.info('Dump have been parsed to database successfully')
 
         # # Blocking
@@ -178,7 +184,7 @@ def main():
         #     rowsdict['Custom'] = rows
 
         # Updating the state in the database
-        result = 'Blocking results\n' + '\n'.join(k + ':' + str(v) for k,v in rowsdict.items())
+        # result = 'Blocking results\n' + '\n'.join(k + ':' + str(v) for k,v in rowsdict.items())
         procutils.finishJob(connstr, log_id, 0, result)
         logger.info('Blocking was finished, enjoy your 1984th')
 

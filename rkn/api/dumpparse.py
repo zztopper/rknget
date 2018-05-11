@@ -1,10 +1,8 @@
 import xml.etree.ElementTree
-import io
-import zipfile
 
 from datetime import datetime
 
-import parseutils
+from api import parseutils
 from db.dataprocessing import DataProcessor
 
 
@@ -31,11 +29,6 @@ def parsedRecently(update_time, connstr):
     if parsed_time:
         return parsed_time.timestamp() > float(update_time)
     return False
-
-
-def parse_zip(dumpzip, connstr):
-    xmldump = zipfile.ZipFile(io.BytesIO(bytes(dumpzip))).read('dump.xml')
-    return parse(xmldump, connstr)
 
 
 def parse(xmldump, connstr):
