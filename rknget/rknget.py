@@ -116,11 +116,11 @@ def main():
                 raise Exception('Couldn\'t obtain dumpdates info', errno=2)
 
             update_time = max(dumpDate['lastDumpDate'],
-                              dumpDate['lastDumpDateUrgently'])
-            parsed_recently = webconn.getData(**config['API'],
-                                 module='api.dumpparse',
-                                 method='parsedRecently',
-                                 update_time_ms=update_time)
+                              dumpDate['lastDumpDateUrgently'])/1000
+            # parsed_recently = webconn.getData(**config['API'],
+            #                      module='api.dumpparse',
+            #                      method='parsedRecently',
+            #                      update_time=update_time)
 
             if parsed_recently:
                 result = 'Last dump is relevant'

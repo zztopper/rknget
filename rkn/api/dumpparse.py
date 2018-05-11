@@ -19,16 +19,16 @@ class RKNDumpFormatException(BaseException):
 #        self.errors = errors
 
 
-def parsedRecently(update_time_ms, connstr):
+def parsedRecently(update_time, connstr):
     """
     Checks if dump info becomes obsolete
-    :param update_time_ms: dump update time in ms
+    :param update_time: dump update time in ms
     :param connstr: smth like "engine://user:pswd@host:port/dbname"
     :return:
     """
     parsed_time = DataProcessor(connstr).getLastParsedTime()
     if parsed_time:
-        return parsed_time.timestamp() > update_time_ms
+        return parsed_time.timestamp() > float(update_time_ms)
     return False
 
 
