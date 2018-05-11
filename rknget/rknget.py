@@ -4,7 +4,6 @@ import sys
 import yaml
 import logging
 import os
-from datetime import datetime
 
 import rknsoapwrapper
 sys.path.append('../')
@@ -116,13 +115,12 @@ def main():
             if not dumpDate:
                 raise Exception('Couldn\'t obtain dumpdates info', errno=2)
 
-            update_time = datetime.datetime.fromtimestamp(
-                max(dumpDate['lastDumpDate'],
-                    dumpDate['lastDumpDateUrgently']))
+            update_time = max(dumpDate['lastDumpDate'],
+                              dumpDate['lastDumpDateUrgently'])
             parsed_recently = webconn.getData(**config['API'],
                                  module='api.dumpparse',
                                  method='parsedRecently',
-                                 update_time=update_time)
+                                 update_time_ms=update_time)
 
             if parsed_recently:
                 result = 'Last dump is relevant'

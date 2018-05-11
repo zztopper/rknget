@@ -1,6 +1,7 @@
 import zipfile
 import xml.etree.ElementTree
 import io
+from datetime import datetime
 
 import api.parseutils
 from db.dataprocessing import DataProcessor
@@ -18,16 +19,16 @@ class RKNDumpFormatException(BaseException):
 #        self.errors = errors
 
 
-def parsedRecently(update_time, connstr):
+def parsedRecently(update_time_ms, connstr):
     """
     Checks if dump info becomes obsolete
-    :param update_time: dump update time
+    :param update_time_ms: dump update time in ms
     :param connstr: smth like "engine://user:pswd@host:port/dbname"
     :return:
     """
     parsed_time = DataProcessor(connstr).getLastParsedTime()
     if parsed_time:
-        return parsed_time > update_time
+        return parsed_time.timestamp() > update_time_ms
     return False
 
 
