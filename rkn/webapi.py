@@ -23,7 +23,7 @@ def main():
         print(str(data))
     else:
         print("Content-type:application/json\r\n\r\n")
-        print(json.dumps(data))
+        print(json.dumps(data, default=str))
 
     return 0
 

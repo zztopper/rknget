@@ -7,7 +7,7 @@ import os
 
 import rknsoapwrapper
 sys.path.append('../')
-from rkn import dumpparse, blocking, procutils
+from rkn import api
 
 CONFIG_PATH = 'config.yml'
 
@@ -33,7 +33,7 @@ def print_help():
     print('Usage: ' + sys.argv[0] + ' (with ./config.yml)\n' +
           'Usage: ' + sys.argv[0] + ' -c [CONFIG PATH]')
 
-<
+
 # Importing configuration
 def initConf(configpath):
     """
@@ -85,27 +85,32 @@ def main():
     logger = initLog(**config['Logging'])
     logger.debug('Starting with config:\n' + str(config))
 
-    connstr = buildConnStr(**config['DB'])
-
     createFolders(config['Global']['tmpPath'])
 
     try:
-        running = procutils.checkRunning(connstr, PROCNAME)
+        running = api.getData(**config['API'],
+                              module='api.procutils',
+                              method='checkRunning',
+                              procname=PROCNAME)
     except Exception as e:
         logger.critical('Couldn\'t obtain information from the database\n' + str(e))
         return 9
     if running and not config['Global'].get('forcerun'):
         logger.critical('The same program is running at this moment. Halting...')
         return 0
-    log_id = procutils.addLogEntry(connstr, PROCNAME)
-
+    log_id = api.getData(**config['API'],
+                         module='api.procutils',
+                         method='addLogEntry',
+                         procname=PROCNAME)
     try:
         if config['Miscellaneous']['uselocaldump']:
             dumpFile = open(file=config['Global']['dumpPath'],
                             mode='rb').read()
         else:
             # Checking dump info
-            dumpinfo = dumpparse.getLastDumpInfo(connstr)
+            dumpinfo = api.getData(**config['API'],
+                                 module='api.dumpparse',
+                                 method='getLastDumpInfo')
             logger.debug('Obtaining dumpfile from ' + config['DumpLoader']['url'])
             rknSW = rknsoapwrapper.RknSOAPWrapper(**config['DumpLoader'])
             dumpDate = rknSW.getLastDumpDateEx()
@@ -164,7 +169,12 @@ def main():
         logger.info('Blocking was finished, enjoy your 1984th')
 
     except Exception as e:
-        procutils.finishJob(connstr, log_id, 1, str(e))
+        api.getData(**config['API'],
+                    module='api.procutils',
+                    method='finishJob',
+                    log_id=log_id,
+                    exit_code=1,
+                    result=str(e))
         logger.error(str(e))
         return getattr(e, 'errno', 1)
 
