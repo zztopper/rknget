@@ -59,4 +59,4 @@ def call(host, port, secure, url,
         raise Exception('WebAPI response code: ' + str(resp.code))
     if raw:
         return resp.read()
-    return json.loads(resp.read())
+    return json.loads(resp.read().decode())
