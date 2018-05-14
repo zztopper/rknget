@@ -202,7 +202,7 @@ def main():
         domainUBCSet, wdomainUBCSet = getUnboundLocalDomains(**config['Unbound'])
 
         logger.info('Fetching restrictions list from DB')
-        domainBlockSet,\
+        domainBlockSet, \
         wdomainBlockSet = webconn.call(**config['API'],
                                        module='api.restrictions',
                                        method='getBlockedDomainsMerged')

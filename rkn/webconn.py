@@ -11,9 +11,9 @@ def _base64httpcreds(user, password):
 
 
 def call(host, port, secure, url,
-            module, method,
-            timeout=60, user=None, password=None,
-            **params):
+         module, method,
+         timeout=60, user=None, password=None, raw=False,
+         **params):
     """
     Gets data from webserver by webapi.
     The syntax is pretty simple.
@@ -26,6 +26,7 @@ def call(host, port, secure, url,
     :param url: the path to rkn/webapi.py executive
     :param module - module name like api.smth
     :param method - method name in the module
+    :param raw - plain answer, not json
     :param params - method params
     RTFM if exists
     :return: everything you could expect or not ;-)
@@ -52,4 +53,6 @@ def call(host, port, secure, url,
     resp = conn.getresponse()
     if resp.code != 200:
         raise Exception('WebAPI response code: ' + str(resp.code))
+    if raw:
+        return urllib.parse.unquote(resp.read().decode())
     return json.loads(resp.read())

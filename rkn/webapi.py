@@ -13,6 +13,9 @@ def _getParamsDict():
 def main():
     fields = _getParamsDict()
     modval = fields.pop('module', None)
+    if modval.split('.')[0] != 'api':
+        print('Content-Type: text/plain\r\n\r\nNot an API')
+        return 1
     metval = fields.pop('method', None)
     rawval = fields.pop('raw', None)
     module = __import__(modval, fromlist=[metval])
