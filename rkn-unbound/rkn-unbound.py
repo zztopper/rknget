@@ -181,10 +181,10 @@ def main():
     createFolders(config['Global']['tmppath'])
 
     try:
-        running = webconn.call(**config['API'],
-                               module='api.procutils',
+        running = webconn.call(module='api.procutils',
                                method='checkRunning',
-                               procname=PROCNAME)
+                               procname=PROCNAME,
+                               **config['API'])
     except Exception as e:
             logger.critical('Couldn\'t obtain information from the database\n' + str(e))
             return 9
@@ -192,10 +192,10 @@ def main():
         logger.critical('The same program is running at this moment. Halting...')
         return 0
     # Getting PID
-    log_id = webconn.call(**config['API'],
-                          module='api.procutils',
+    log_id = webconn.call(module='api.procutils',
                           method='addLogEntry',
-                          procname=PROCNAME)
+                          procname=PROCNAME,
+                          **config['API'])
 
     try:
         logger.info('Obtaining current domain blocklists on unbound daemon')
@@ -203,9 +203,9 @@ def main():
 
         logger.info('Fetching restrictions list from DB')
         domainBlockSet, \
-        wdomainBlockSet = webconn.call(**config['API'],
-                                       module='api.restrictions',
-                                       method='getBlockedDomainsMerged')
+        wdomainBlockSet = webconn.call(module='api.restrictions',
+                                       method='getBlockedDomainsMerged',
+                                       **config['API'])
         # Lists were got, transforming
         domainBlockSet = set(domainBlockSet)
         wdomainBlockSet = set(wdomainBlockSet)
@@ -224,9 +224,9 @@ def main():
                                      domainset=wdomainUBCSet - wdomainBlockSet)
 
         logger.info('Generating permanent config...')
-        buildUnboundConfig(**config['Unbound'],
-                           domainset=domainBlockSet,
-                           wdomainset=wdomainBlockSet
+        buildUnboundConfig(domainset=domainBlockSet,
+                           wdomainset=wdomainBlockSet,
+                           **config['API']
                            )
         result = ['Unbound updates:',
                   'added: ' + str(addDcount),
@@ -235,21 +235,21 @@ def main():
                   'deleted_wildcard: ' + str(delWDcount)
                   ]
         logger.info(', '.join(result))
-        webconn.call(**config['API'],
-                     module='api.procutils',
+        webconn.call(module='api.procutils',
                      method='finishJob',
                      log_id=log_id,
                      exit_code=0,
-                     result='\n'.join(result))
+                     result='\n'.join(result),
+                     **config['API'])
         logger.info('Blocking was finished, enjoy your 1984th')
 
     except Exception as e:
-        webconn.call(**config['API'],
-                     module='api.procutils',
+        webconn.call(module='api.procutils',
                      method='finishJob',
                      log_id=log_id,
                      exit_code=1,
-                     result=str(e))
+                     result=str(e),
+                     **config['API'])
         logger.error(str(e))
         return getattr(e, 'errno', 1)
 

@@ -169,10 +169,10 @@ def main():
     createFolders(config['Global']['tmppath'])
 
     try:
-        running = webconn.call(**config['API'],
-                               module='api.procutils',
+        running = webconn.call(module='api.procutils',
                                method='checkRunning',
-                               procname=PROCNAME)
+                               procname=PROCNAME,
+                               **config['API'])
     except Exception as e:
             logger.critical('Couldn\'t obtain information from the database\n' + str(e))
             return 9
@@ -180,54 +180,53 @@ def main():
         logger.critical('The same program is running at this moment. Halting...')
         return 0
     # Getting PID
-    log_id = webconn.call(**config['API'],
-                          module='api.procutils',
+    log_id = webconn.call(module='api.procutils',
                           method='addLogEntry',
-                          procname=PROCNAME)
-
+                          procname=PROCNAME,
+                          **config['API'])
     try:
         # Fetching http restrictions
         logger.info('Fetching restrictions list from DB')
 
         urlsSet = {url.lstrip('http://') for url in
-                   webconn.call(**config['API'],
-                                module='api.restrictions',
-                                method='getBlockedHTTP')
+                   webconn.call(module='api.restrictions',
+                                method='getBlockedHTTP',
+                                **config['API'])
                    }
         if config['Extra']['https']:
             urlsSet.update(
                 {url.lstrip('https://') for url in
-                 webconn.call(**config['API'],
-                              module='api.restrictions',
-                              method='getBlockedHTTPS')
+                 webconn.call(module='api.restrictions',
+                              method='getBlockedHTTPS',
+                              **config['API'])
                  }
             )
         if config['Extra']['domain']:
             urlsSet.update(
-                webconn.call(**config['API'],
-                             module='api.restrictions',
+                webconn.call(module='api.restrictions',
                              method='_getBlockedDataList',
-                             entityname='domain')
+                             entityname='domain',
+                             **config['API'])
             )
         if config['Extra']['domain-mask']:
             urlsSet.update(
-                webconn.call(**config['API'],
-                             module='api.restrictions',
+                webconn.call(module='api.restrictions',
                              method='_getBlockedDataList',
-                             entityname='domain-mask')
+                             entityname='domain-mask',
+                             **config['API'])
             )
         if config['Extra']['ip']:
             urlsSet.update(
-                webconn.call(**config['API'],
-                             module='api.restrictions',
+                webconn.call(module='api.restrictions',
                              method='_getBlockedDataList',
-                             entityname='ip')
+                             entityname='ip',
+                             **config['API'])
             )
         if config['Extra']['ipsubnet']:
             urlsSet.update(
-                webconn.call(**config['API'],
-                             module='api.restrictions',
-                             method='getBlockedIPsFromSubnets')
+                webconn.call(module='api.restrictions',
+                             method='getBlockedIPsFromSubnets',
+                             **config['API'])
             )
         # Truncating entries if too many.
         if len(urlsSet) > config['Extra']['truncate-after']:
@@ -260,21 +259,21 @@ def main():
             result.append(res)
 
         # Updating the state in the database
-        webconn.call(**config['API'],
-                     module='api.procutils',
+        webconn.call(module='api.procutils',
                      method='finishJob',
                      log_id=log_id,
                      exit_code=0,
-                     result='\n'.join(result))
+                     result='\n'.join(result),
+                     **config['API'])
         logger.info('Blocking was finished, enjoy your 1984th')
 
     except Exception as e:
-        webconn.call(**config['API'],
-                     module='api.procutils',
+        webconn.call(module='api.procutils',
                      method='finishJob',
                      log_id=log_id,
                      exit_code=1,
-                     result=str(e))
+                     result=str(e),
+                     **config['API'])
         logger.error(str(e))
         return getattr(e, 'errno', 1)
 

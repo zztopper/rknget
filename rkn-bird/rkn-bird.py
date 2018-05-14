@@ -113,10 +113,10 @@ def main():
     createFolders(config['Global']['tmppath'])
 
     try:
-        running = webconn.call(**config['API'],
-                               module='api.procutils',
+        running = webconn.call(module='api.procutils',
                                method='checkRunning',
-                               procname=PROCNAME)
+                               procname=PROCNAME,
+                               **config['API'])
     except Exception as e:
             logger.critical('Couldn\'t obtain information from the database\n' + str(e))
             return 9
@@ -124,17 +124,17 @@ def main():
         logger.critical('The same program is running at this moment. Halting...')
         return 0
     # Getting PID
-    log_id = webconn.call(**config['API'],
-                          module='api.procutils',
+    log_id = webconn.call(module='api.procutils',
                           method='addLogEntry',
-                          procname=PROCNAME)
+                          procname=PROCNAME,
+                          **config['API'])
 
     try:
         # Fetching ip restrictions
         logger.info('Fetching restrictions list from DB')
-        ipsublist, totalblocked = webconn.call(**config['API'],
-                                               module='api.restrictions',
-                                               method='getBlockedIPsMerged')
+        ipsublist, totalblocked = webconn.call(module='api.restrictions',
+                                               method='getBlockedIPsMerged',
+                                               **config['API'])
         logger.info('Updating bird configuration and restarting daemon...')
         # Updating BGP casts
         updateBirdConfig(**config['Bird'],
@@ -144,21 +144,21 @@ def main():
                   str(len(ipsublist)) + ' entries are announced by BGP daemon']
         logger.info(', '.join(result))
         # Updating the state in the database
-        webconn.call(**config['API'],
-                     module='api.procutils',
+        webconn.call(module='api.procutils',
                      method='finishJob',
                      log_id=log_id,
                      exit_code=0,
-                     result='\n'.join(result))
+                     result='\n'.join(result),
+                     **config['API'])
         logger.info('Blocking was finished, enjoy your 1984th')
 
     except Exception as e:
-        webconn.call(**config['API'],
-                     module='api.procutils',
+        webconn.call(module='api.procutils',
                      method='finishJob',
                      log_id=log_id,
                      exit_code=1,
-                     result=str(e))
+                     result=str(e),
+                     **config['API'])
         logger.error(str(e))
         return getattr(e, 'errno', 1)
 

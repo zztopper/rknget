@@ -91,10 +91,10 @@ def main():
     createFolders(config['Global']['tmpPath'])
 
     try:
-        running = webconn.call(**config['API'],
-                               module='api.procutils',
+        running = webconn.call(module='api.procutils',
                                method='checkRunning',
-                               procname=PROCNAME)
+                               procname=PROCNAME,
+                               **config['API'])
     except Exception as e:
             logger.critical('Couldn\'t obtain information from the database\n' + str(e))
             return 9
@@ -102,10 +102,10 @@ def main():
         logger.critical('The same program is running at this moment. Halting...')
         return 0
     # Getting PID
-    log_id = webconn.call(**config['API'],
-                          module='api.procutils',
+    log_id = webconn.call(module='api.procutils',
                           method='addLogEntry',
-                          procname=PROCNAME)
+                          procname=PROCNAME,
+                          **config['API'])
     try:
         if config['Miscellaneous']['uselocaldump']:
             dumpFile = open(file=config['Global']['dumpPath'],
@@ -120,21 +120,21 @@ def main():
 
             update_time = max(dumpDate['lastDumpDate'],
                               dumpDate['lastDumpDateUrgently'])/1000
-            parsed_recently = webconn.call(**config['API'],
-                                           module='api.dumpparse',
+            parsed_recently = webconn.call(module='api.dumpparse',
                                            method='parsedRecently',
-                                           update_time=update_time)
+                                           update_time=update_time,
+                                           **config['API'])
 
             if parsed_recently:
                 result = 'Last dump is relevant'
                 logger.info(result)
                 # Updating the state in database
-                webconn.call(**config['API'],
-                             module='api.procutils',
+                webconn.call(module='api.procutils',
                              method='finishJob',
                              log_id=log_id,
                              exit_code=0,
-                             result=result)
+                             result=result,
+                             **config['API'])
                 return 0
 
             # Obtaining dump file
@@ -151,10 +151,10 @@ def main():
         # Freeing memory
         del dumpFile
 
-        parse_result = webconn.call(**config['API'],
-                                    module='api.dumpparse',
+        parse_result = webconn.call(module='api.dumpparse',
                                     method='parse',
-                                    xmldump=xmldump)
+                                    xmldump=xmldump,
+                                    **config['API'])
         if not parse_result:
             raise Exception('Dump hasn\'t been parsed', errno=3)
         # Freeing memory
@@ -164,23 +164,23 @@ def main():
         # Blocking
         rowsdict = dict()
         # It may slow down but is safe
-        webconn.call(**config['API'],
-                     module='api.blocking',
-                     method='unblockResources')
+        webconn.call(module='api.blocking',
+                     method='unblockResources',
+                     **config['API'])
         # Fairly blocking first
         logger.debug('Blocking fairly (as is)')
-        rows = webconn.call(**config['API'],
-                            module='api.blocking',
-                            method='blockResourcesFairly')
+        rows = webconn.call(module='api.blocking',
+                            method='blockResourcesFairly',
+                            **config['API'])
         rowsdict['fairly'] = rows
         logger.info('Blocked fairly ' + str(rows) + ' rows')
         for src, dst in config['Blocking']:
             logger.info('Blocking ' + str(dst) + ' from ' + str(src))
-            rows = webconn.call(**config['API'],
-                                module='api.blocking',
+            rows = webconn.call(module='api.blocking',
                                 method='blockResourcesExcessively',
                                 src_entity=src,
-                                dst_entity=dst)
+                                dst_entity=dst,
+                                **config['API'])
             if rows is not None:
                 logger.info('Blocked ' + str(rows) + ' rows')
                 rowsdict[str(dst) + '->' + str(src)] = rows
@@ -189,30 +189,30 @@ def main():
         # Blocking custom resouces
         if config['Miscellaneous']['custom']:
             logger.info('Blocking custom resources')
-            rows = webconn.call(**config['API'],
-                                module='api.blocking',
-                                method='blockCustom')
+            rows = webconn.call(module='api.blocking',
+                                method='blockCustom',
+                                **config['API'])
             logger.info('Blocked ' + str(rows))
             rowsdict['Custom'] = rows
 
         # Updating the state in the database
         result = 'Blocking results\n' + '\n'.join(k + ':' + str(v) for k,v in rowsdict.items())
         # Updating the state in database
-        webconn.call(**config['API'],
-                     module='api.procutils',
+        webconn.call(module='api.procutils',
                      method='finishJob',
                      log_id=log_id,
                      exit_code=0,
-                     result=result)
+                     result=result,
+                     **config['API'])
         logger.info('Blocking was finished, enjoy your 1984th')
 
     except Exception as e:
-        webconn.call(**config['API'],
-                     module='api.procutils',
+        webconn.call(module='api.procutils',
                      method='finishJob',
                      log_id=log_id,
                      exit_code=1,
-                     result=str(e))
+                     result=str(e),
+                     **config['API'])
         logger.error(str(e))
         return getattr(e, 'errno', 1)
 

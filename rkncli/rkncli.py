@@ -101,9 +101,9 @@ def main():
     config = initConf(args['confpath'])
     try:
         print(str(
-            webconn.call(**config['API'],
-                         module=CLI_MOD,
+            webconn.call(module=CLI_MOD,
                          method=CLI_DICT[args['subject']][args['action']]['func'],
+                         **config['API'],
                          **args)
         ))
     except Exception as e:
