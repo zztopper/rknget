@@ -3,7 +3,7 @@ Global:
   forcerun: False
 
 Bird:
-  restartcmd: service bird restart
+  restartcmd: /etc/init.d/bird restart
   confpath: ./bird-rkn.conf
   stubip: 1.1.1.1
 

@@ -97,7 +97,7 @@ def updateBirdConfig(confpath, stubip, ipsublist, restartcmd, **kwargs):
     for ipsub in ipsublist:
         configfile.write('route ' + ipsub + ' via ' + stubip + ';\n')
     configfile.close()
-    subprocess.call(restartcmd.split(' '), shell=True)
+    subprocess.call([restartcmd], shell=True)
 
 
 def main():
