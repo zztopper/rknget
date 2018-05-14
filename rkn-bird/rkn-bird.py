@@ -137,8 +137,8 @@ def main():
                                                **config['API'])
         logger.info('Updating bird configuration and restarting daemon...')
         # Updating BGP casts
-        updateBirdConfig(**config['Bird'],
-                         ipsublist=ipsublist)
+        updateBirdConfig(ipsublist=ipsublist,
+                         **config['Bird'])
         # Updating the state in the database
         result = [str(totalblocked) + ' ip entries are routed to blackhole',
                   str(len(ipsublist)) + ' entries are announced by BGP daemon']
