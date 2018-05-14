@@ -9,7 +9,8 @@ from rkn import webconn
 
 CONFIG_PATH = 'config.yml'
 
-CLI_MOD='api.dbutils'
+CLI_MOD = 'api.dbutils'
+
 CLI_DICT = {
     'dumpinfo': {'show': {'args': [],
                           'func': 'showDumpInfo',
@@ -101,7 +102,6 @@ def main():
     try:
         print(str(
             webconn.call(**config['API'],
-                         raw=True,
                          module=CLI_MOD,
                          method=CLI_DICT[args['subject']][args['action']]['func'],
                          **args)

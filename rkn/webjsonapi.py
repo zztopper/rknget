@@ -17,7 +17,7 @@ def main():
     jsin['connstr'] = connstr
 
     # Shoot your leg through!!!
-    data = getattr(module, metval)(**fields)
+    data = getattr(module, metval)(**jsin)
 
     print("Content-type:application/json\r\n\r\n")
     print(json.dumps(data, default=str))

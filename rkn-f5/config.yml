@@ -43,7 +43,7 @@ Extra:
 API:
   host: 10.1.241.154
   port: 80
-  url: /cgi-bin/rknget/rkn/webapi.py
+  url: /cgi-bin/rknget/rkn/webjsonapi.py
   secure: false
   timeout: 720
 

@@ -147,7 +147,7 @@ def main():
 
         # Parsing dump file
         logger.info('Parsing dump file...')
-        xmldump = zipfile.ZipFile(io.BytesIO(dumpFile)).read('dump.xml')
+        xmldump = zipfile.ZipFile(io.BytesIO(dumpFile)).read('dump.xml').decode('cp1251')
         # Freeing memory
         del dumpFile
 
