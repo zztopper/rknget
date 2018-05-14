@@ -1,5 +1,11 @@
 #!/usr/bin/env python3
 
+"""
+This version of rknget was saved for low memory usecases.
+Instead of POSTing dump.xml to the web app server via API,
+it works directly with the database using API modules.
+"""
+
 import sys
 import yaml
 import logging
@@ -7,14 +13,15 @@ import os
 import io
 import zipfile
 
+sys.path.append('../rkn')
+from rkn.api import dumpparse, blocking, procutils
+from rkn.dbconn import connstr
 import rknsoapwrapper
-sys.path.append('../')
-from rkn import webconn
+
 
 CONFIG_PATH = 'config.yml'
 
 PROCNAME = __file__.split(os.path.sep)[-1].split('.')[0]
-
 
 # Parsing arguments
 def confpath_argv():
@@ -91,21 +98,15 @@ def main():
     createFolders(config['Global']['tmpPath'])
 
     try:
-        running = webconn.call(**config['API'],
-                               module='api.procutils',
-                               method='checkRunning',
-                               procname=PROCNAME)
+        running = procutils.checkRunning(connstr, PROCNAME)
     except Exception as e:
-            logger.critical('Couldn\'t obtain information from the database\n' + str(e))
-            return 9
+        logger.critical('Couldn\'t obtain information from the database\n' + str(e))
+        return 9
     if running and not config['Global'].get('forcerun'):
         logger.critical('The same program is running at this moment. Halting...')
         return 0
-    # Getting PID
-    log_id = webconn.call(**config['API'],
-                          module='api.procutils',
-                          method='addLogEntry',
-                          procname=PROCNAME)
+    log_id = procutils.addLogEntry(connstr, PROCNAME)
+
     try:
         if config['Miscellaneous']['uselocaldump']:
             dumpFile = open(file=config['Global']['dumpPath'],
@@ -117,24 +118,16 @@ def main():
             dumpDate = rknSW.getLastDumpDateEx()
             if not dumpDate:
                 raise Exception('Couldn\'t obtain dumpdates info', errno=2)
-
             update_time = max(dumpDate['lastDumpDate'],
                               dumpDate['lastDumpDateUrgently'])/1000
-            parsed_recently = webconn.call(**config['API'],
-                                           module='api.dumpparse',
-                                           method='parsedRecently',
-                                           update_time=update_time)
+
+            parsed_recently =  dumpparse.parsedRecently(update_time,connstr)
 
             if parsed_recently:
                 result = 'Last dump is relevant'
                 logger.info(result)
                 # Updating the state in database
-                webconn.call(**config['API'],
-                             module='api.procutils',
-                             method='finishJob',
-                             log_id=log_id,
-                             exit_code=0,
-                             result=result)
+                procutils.finishJob(connstr, log_id, 0, result)
                 return 0
 
             # Obtaining dump file
@@ -146,17 +139,11 @@ def main():
                 open(file=config['Global']['dumpPath'], mode='wb').write(dumpFile)
 
         # Parsing dump file
-        logger.info('Parsing dump file...')
         xmldump = zipfile.ZipFile(io.BytesIO(dumpFile)).read('dump.xml').decode('cp1251')
         # Freeing memory
         del dumpFile
 
-        parse_result = webconn.call(**config['API'],
-                                    module='api.dumpparse',
-                                    method='parse',
-                                    xmldump=xmldump)
-        if not parse_result:
-            raise Exception('Dump hasn\'t been parsed', errno=3)
+        dumpparse.parse(xmldump, connstr)
         # Freeing memory
         del xmldump
         logger.info('Dump have been parsed to database successfully')
@@ -164,23 +151,15 @@ def main():
         # Blocking
         rowsdict = dict()
         # It may slow down but is safe
-        webconn.call(**config['API'],
-                     module='api.blocking',
-                     method='unblockResources')
+        blocking.unblockResources(connstr)
         # Fairly blocking first
         logger.debug('Blocking fairly (as is)')
-        rows = webconn.call(**config['API'],
-                            module='api.blocking',
-                            method='blockResourcesFairly')
+        rows = blocking.blockResourcesFairly(connstr)
         rowsdict['fairly'] = rows
         logger.info('Blocked fairly ' + str(rows) + ' rows')
         for src, dst in config['Blocking']:
             logger.info('Blocking ' + str(dst) + ' from ' + str(src))
-            rows = webconn.call(**config['API'],
-                                module='api.blocking',
-                                method='blockResourcesExcessively',
-                                src_entity=src,
-                                dst_entity=dst)
+            rows = blocking.blockResourcesExcessively(connstr, src, dst)
             if rows is not None:
                 logger.info('Blocked ' + str(rows) + ' rows')
                 rowsdict[str(dst) + '->' + str(src)] = rows
@@ -189,30 +168,17 @@ def main():
         # Blocking custom resouces
         if config['Miscellaneous']['custom']:
             logger.info('Blocking custom resources')
-            rows = webconn.call(**config['API'],
-                                module='api.blocking',
-                                method='blockCustom')
+            rows = blocking.blockCustom(connstr)
             logger.info('Blocked ' + str(rows))
             rowsdict['Custom'] = rows
 
         # Updating the state in the database
         result = 'Blocking results\n' + '\n'.join(k + ':' + str(v) for k,v in rowsdict.items())
-        # Updating the state in database
-        webconn.call(**config['API'],
-                     module='api.procutils',
-                     method='finishJob',
-                     log_id=log_id,
-                     exit_code=0,
-                     result=result)
+        procutils.finishJob(connstr, log_id, 0, result)
         logger.info('Blocking was finished, enjoy your 1984th')
 
     except Exception as e:
-        webconn.call(**config['API'],
-                     module='api.procutils',
-                     method='finishJob',
-                     log_id=log_id,
-                     exit_code=1,
-                     result=str(e))
+        procutils.finishJob(connstr, log_id, 1, str(e))
         logger.error(str(e))
         return getattr(e, 'errno', 1)
 

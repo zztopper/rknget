@@ -1,6 +1,5 @@
 Global:
   tmppath: ./tmp
-  statepath: ./state.yml
   forcerun: False
 
 Unbound:
