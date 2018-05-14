@@ -44,14 +44,19 @@ def call(host, port, secure, url,
     if None not in (user, password):
         headers['Authorization'] = 'Basic ' + _base64httpcreds(user, password)
 
+    if raw:
+        body = urllib.parse.urlencode(params)
+    else:
+        body = json.dumps(params)
+
     conn.request(method='POST',
                  url=url,
-                 body=urllib.parse.urlencode(params),
+                 body=body,
                  headers=headers
                  )
     resp = conn.getresponse()
     if resp.code != 200:
         raise Exception('WebAPI response code: ' + str(resp.code))
     if raw:
-        return urllib.parse.unquote(resp.read().decode())
+        return resp.read()
     return json.loads(resp.read())
