@@ -49,7 +49,6 @@ def call(host, port, secure, url,
                  body=urllib.parse.urlencode(params),
                  headers=headers
                  )
-
     resp = conn.getresponse()
     if resp.code != 200:
         raise Exception('WebAPI response code: ' + str(resp.code))
