@@ -95,7 +95,7 @@ def main():
     logger = initLog(**config['Logging'])
     logger.debug('Starting with config:\n' + str(config))
 
-    createFolders(config['Global']['tmpPath'])
+    createFolders(config['Global']['tmppath'])
 
     try:
         running = procutils.checkRunning(connstr, PROCNAME)

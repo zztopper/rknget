@@ -30,7 +30,7 @@ class DBOperator(DataProcessor):
                                                  Content.include_time,
                                                  Content.in_dump,
                                                  Resource.is_blocked,
-                                                 DumpInfo.parse_time). \
+                                                 DumpInfo.parse_time.label('first_time')). \
             join(BlockType, Content.blocktype_id == BlockType.id). \
             join(DumpInfo, Content.first_dump_id == DumpInfo.id)
 
