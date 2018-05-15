@@ -21,8 +21,8 @@ class DBOperator(DataProcessor):
                                                   BlockType.name,
                                                   Resource.is_custom,
                                                   Resource.is_blocked,
-                                                  Resource.value).\
-            join(Content, Resource.content_id == Content.id). \
+                                                  Resource.value). \
+            outerjoin(Content, Resource.content_id == Content.id). \
             join(Entitytype, Resource.entitytype_id == Entitytype.id). \
             join(BlockType, Content.blocktype_id == BlockType.id)
         self._contentQuery = self._session.query(Content.id,
