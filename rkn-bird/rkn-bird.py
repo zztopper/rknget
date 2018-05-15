@@ -72,7 +72,8 @@ def main():
         # Fetching ip restrictions
         logger.info('Fetching restrictions list from DB')
         ipsublist, totalblocked = webconn.call(module='api.restrictions',
-                                               method='getBlockedIPsMerged',
+                                               method='getBlockedIPs',
+                                               collapse=config['Bird']['collapse'],
                                                **config['API'])
         logger.info('Updating bird configuration and restarting daemon...')
         # Updating BGP casts

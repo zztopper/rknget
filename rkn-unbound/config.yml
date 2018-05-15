@@ -6,6 +6,7 @@ Global:
 Unbound:
   binarypath: /usr/sbin/unbound-control
   confpath: ./rkn.conf
+  collapse: True
   stubip: 10.1.1.3
 
 API:
