@@ -1,5 +1,6 @@
 from sqlalchemy import or_, and_
 from sqlalchemy import func
+from sqlalchemy.orm import aliased
 
 from db.dataprocessing import DataProcessor
 from db.scheme import *
@@ -25,14 +26,17 @@ class DBOperator(DataProcessor):
             outerjoin(Content, Resource.content_id == Content.id). \
             join(Entitytype, Resource.entitytype_id == Entitytype.id). \
             outerjoin(BlockType, Content.blocktype_id == BlockType.id)
+        self._DumpInfoA = aliased(DumpInfo, name='DumpInfoA')
         self._contentQuery = self._session.query(Content.id,
                                                  Content.outer_id,
                                                  Content.include_time,
                                                  Content.in_dump,
                                                  Resource.is_blocked,
-                                                 DumpInfo.parse_time.label('first_time')). \
+                                                 DumpInfo.parse_time.label('first_time'),
+                                                 self._DumpInfoA.parse_time.label('last_time')). \
             join(BlockType, Content.blocktype_id == BlockType.id). \
-            join(DumpInfo, Content.first_dump_id == DumpInfo.id)
+            join(DumpInfo, Content.first_dump_id == DumpInfo.id). \
+            join(self._DumpInfoA, Content.last_dump_id == self._DumpInfoA.id)
 
     def addCustomResource(self, entitytype, value):
         """
