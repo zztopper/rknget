@@ -82,8 +82,11 @@ class DBOperator(DataProcessor):
         :param entitytype: type of entity or any if not set
         :return: All entries matching the value. With headers.
         """
-        query = self._resourceQuery. \
-            filter(Resource.value.like('%' + value + '%'))
+        if value == '':
+            query = self._resourceQuery
+        else:
+            query = self._resourceQuery. \
+                filter(Resource.value.like('%' + value + '%'))
 
         entitytype_id = self._entitytypeDict.get(entitytype)
         if entitytype_id is not None:
