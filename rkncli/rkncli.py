@@ -5,7 +5,7 @@ import argparse
 import yaml
 
 sys.path.append('../')
-from rkn import webconn
+from common import webconn
 
 CONFIG_PATH = 'config.yml'
 

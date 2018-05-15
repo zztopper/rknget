@@ -1,5 +1,5 @@
 Global:
-  tmpPath: ./tmp
+  tmppath: ./tmp
   savedump: True
   dumpPath: ./tmp/dump.xml.zip
   reqPath: ./request.xml
