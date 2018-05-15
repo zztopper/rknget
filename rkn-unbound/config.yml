@@ -1,6 +1,7 @@
 Global:
   tmppath: ./tmp
   forcerun: False
+  saveconf: True
 
 Unbound:
   binarypath: /usr/sbin/unbound-control

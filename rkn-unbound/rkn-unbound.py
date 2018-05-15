@@ -5,6 +5,7 @@ import yaml
 import logging
 import os
 import subprocess
+import shutil
 
 sys.path.append('../')
 from rkn import webconn
@@ -47,7 +48,7 @@ def initConf(configpath):
 def initLog(logpath='log.log', stdoutlvl='DEBUG', logfilelvl='INFO', **kwargs):
 
     logger = logging.getLogger()
-    logger.setLevel(logging.getLevelName(stdoutlvl))
+    logger.setLevel(logging.DEBUG)
     formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
     filehandler = logging.FileHandler(logpath)
     filehandler.setLevel(logging.getLevelName(logfilelvl))
@@ -65,7 +66,7 @@ def createFolders(*args):
     """
     Creates nesessary folders
     :param args: paths tuple
-    :return: Nothingzzzя
+    :return: Nothing
     """
     for path in args:
         try:
@@ -226,8 +227,11 @@ def main():
         logger.info('Generating permanent config...')
         buildUnboundConfig(domainset=domainBlockSet,
                            wdomainset=wdomainBlockSet,
-                           **config['API']
+                           **config['Unbound']
                            )
+        if config['Global']['saveconf']:
+            shutil.copy(config['Unbound']['confpath'],
+                        config['Global']['tmppath'])
         result = ['Unbound updates:',
                   'added: ' + str(addDcount),
                   'added_wildcard: ' + str(addWDcount),

@@ -1,6 +1,7 @@
 Global:
   tmppath: ./tmp
   forcerun: False
+  saveconf: True
 
 Bird:
   restartcmd: /etc/init.d/bird restart

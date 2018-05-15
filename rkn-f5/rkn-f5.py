@@ -51,7 +51,7 @@ def initConf(configpath):
 def initLog(logpath='log.log', stdoutlvl='DEBUG', logfilelvl='INFO', **kwargs):
 
     logger = logging.getLogger()
-    logger.setLevel(logging.getLevelName(stdoutlvl))
+    logger.setLevel(logging.DEBUG)
     formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
     filehandler = logging.FileHandler(logpath)
     filehandler.setLevel(logging.getLevelName(logfilelvl))
@@ -63,19 +63,6 @@ def initLog(logpath='log.log', stdoutlvl='DEBUG', logfilelvl='INFO', **kwargs):
     logger.addHandler(streamhandler)
 
     return logger
-
-
-def createFolders(*args):
-    """
-    Creates nesessary folders
-    :param args: paths tuple
-    :return: Nothing
-    """
-    for path in args:
-        try:
-            os.makedirs(path, mode=0o755, exist_ok=True)
-        finally:
-            pass
 
 
 def _base64httpcreds(user, password):
@@ -166,7 +153,6 @@ def main():
 
     logger = initLog(**config['Logging'])
     logger.debug('Successfully started at with config:\n' + str(config))
-    createFolders(config['Global']['tmppath'])
 
     try:
         running = webconn.call(module='api.procutils',

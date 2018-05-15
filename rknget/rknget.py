@@ -50,7 +50,7 @@ def initConf(configpath):
 def initLog(logpath='log.log', stdoutlvl='DEBUG', logfilelvl='INFO', **kwargs):
 
     logger = logging.getLogger()
-    logger.setLevel(logging.getLevelName(stdoutlvl))
+    logger.setLevel(logging.DEBUG)
     formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
     filehandler = logging.FileHandler(logpath)
     filehandler.setLevel(logging.getLevelName(logfilelvl))

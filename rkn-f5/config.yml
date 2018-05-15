@@ -1,5 +1,4 @@
 Global:
-  tmppath: ./tmp
   forcerun: False
 
 F5:
@@ -17,20 +16,6 @@ F5:
     user: admin
     password: admin
     timeout: 60
-#  - host: 10.1.1.210
-#    port: 443
-#    secure: true
-#    datagroup: rcn_group
-#    user: rkn
-#    password: FG3xm$0Tdn
-#    timeout: 60
-#  - host: 10.1.1.211
-#    port: 443
-#    secure: true
-#    datagroup: rcn_group
-#    user: rkn
-#    password: FG3xm$0Tdn
-#    timeout: 60
 
 Extra:
   https: True

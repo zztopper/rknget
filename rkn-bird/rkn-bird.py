@@ -5,6 +5,7 @@ import yaml
 import logging
 import os
 import subprocess
+import shutil
 
 sys.path.append('../')
 from rkn import webconn
@@ -48,7 +49,7 @@ def initConf(configpath):
 def initLog(logpath='log.log', stdoutlvl='DEBUG', logfilelvl='INFO', **kwargs):
 
     logger = logging.getLogger()
-    logger.setLevel(logging.getLevelName(stdoutlvl))
+    logger.setLevel(logging.DEBUG)
     formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
     filehandler = logging.FileHandler(logpath)
     filehandler.setLevel(logging.getLevelName(logfilelvl))
@@ -139,6 +140,10 @@ def main():
         # Updating BGP casts
         updateBirdConfig(ipsublist=ipsublist,
                          **config['Bird'])
+        if config['Global']['saveconf']:
+            shutil.copy(config['Bird']['confpath'],
+                        config['Global']['tmppath'])
+
         # Updating the state in the database
         result = [str(totalblocked) + ' ip entries are routed to blackhole',
                   str(len(ipsublist)) + ' entries are announced by BGP daemon']
