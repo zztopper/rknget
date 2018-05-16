@@ -168,7 +168,9 @@ class DBOperator(DataProcessor):
 
     def getLastJobs(self, procname=None, count=10):
         query = self._session.query(Log.id,
+                                    Log.exit_code,
                                     Log.start_time,
+                                    Log.finish_time,
                                     Log.procname)
         if procname is not None:
             query = query.filter(Log.procname == procname)
