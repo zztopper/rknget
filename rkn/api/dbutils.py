@@ -81,7 +81,7 @@ def delCustomResource(connstr, entitytype, value, **kwargs):
         return "Entity type error"
 
 
-def findResource(connstr, entitytype=None, value, **kwargs):
+def findResource(connstr, value, entitytype=None, **kwargs):
     """
     Adds custom resource to the database's Resource table.
     :param connstr: smth like "engine://user:pswd@host:port/dbname"
