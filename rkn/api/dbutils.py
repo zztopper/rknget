@@ -132,7 +132,7 @@ def unlockJobs(connstr, procname=None, **kwargs):
     Sets exit_code and result of the all log entires with empty exit_code.
     :param connstr: smth like "engine://user:pswd@host:port/dbname"
     :param procname: specify procname to unlock
-    :return: ?
+    :return: Affected entries count.
     """
     if procname == 'all':
         procname = None

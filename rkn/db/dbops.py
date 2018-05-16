@@ -147,7 +147,7 @@ class DBOperator(DataProcessor):
 
     def unlockJobs(self, procname=None):
         query = self._session.query(Log). \
-            filter(Log.exit_code is None)
+            filter(Log.exit_code == None)
         if procname is not None:
             query = query.filter(Log.procname == procname)
 
@@ -159,7 +159,7 @@ class DBOperator(DataProcessor):
         query = self._session.query(Log.id,
                                     Log.start_time,
                                     Log.procname). \
-            filter(Log.exit_code is None)
+            filter(Log.exit_code == None)
         if procname is not None:
             query = query.filter(Log.procname == procname)
         rows = query.order_by(DumpInfo.id.desc()).all()
