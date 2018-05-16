@@ -1,5 +1,5 @@
 API:
-  host: 10.1.241.154
+  host: 10.1.253.90
   port: 80
   url: /cgi-bin/rknget/rkn/webjsonapi.py
   secure: false

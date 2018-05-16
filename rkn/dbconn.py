@@ -9,7 +9,7 @@ def buildConnStr(engine, host, port, dbname, user, password, **kwargs):
 
 dbconn = {
     "engine": "postgresql",
-    "host": "10.1.241.154",
+    "host": "127.0.0.1",
     "port": "5432",
     "dbname": "rkndb",
     "user": "rkn",
