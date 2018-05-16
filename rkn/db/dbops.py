@@ -162,6 +162,6 @@ class DBOperator(DataProcessor):
             filter(Log.exit_code == None)
         if procname is not None:
             query = query.filter(Log.procname == procname)
-        rows = query.order_by(DumpInfo.id.desc()).all()
+        rows = query.order_by(Log.id.desc()).all()
 
         return self._outputQueryRows(rows)
