@@ -41,11 +41,16 @@ CLI_DICT = {
                 },
     'process': {'del': {'args': ['procname'],
                         'func': 'unlockJobs',
-                        'help': 'Set \'all\' to clean all jobs.'
+                        'help': 'Set \'all\' to clean all processes.'
                         },
                 'get': {'args': ['procname'],
                         'func': 'getActiveJobs',
-                        'help': 'Set \'all\' to show all jobs.'
+                        'help': 'Set \'all\' to show all processes.'
+                        },
+                'last': {'args': ['procname', '...'],
+                        'func': 'getLastJobs',
+                        'help': 'Set \'all\' to show all processes. ' +
+                                'Point number of rows, else the last 10 will be shown'
                         }
                 }
 }

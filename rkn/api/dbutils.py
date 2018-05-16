@@ -146,3 +146,16 @@ def getActiveJobs(connstr, procname=None, **kwargs):
         procname = None
     return _dbAsText(*DBOperator(connstr).getActiveJobs(procname))
 
+
+def getLastJobs(connstr, procname=None, **kwargs):
+
+    if kwargs.get('args') is None:
+        count = 10
+    else:
+        count = kwargs['args'][0]
+
+    if procname == 'all':
+        procname = None
+
+    return _dbAsText(*DBOperator(connstr).getLastJobs(procname, count))
+

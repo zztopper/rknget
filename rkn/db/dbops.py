@@ -165,3 +165,14 @@ class DBOperator(DataProcessor):
         rows = query.order_by(Log.id.desc()).all()
 
         return self._outputQueryRows(rows)
+
+    def getLastJobs(self, procname=None, count=10):
+        query = self._session.query(Log.id,
+                                    Log.start_time,
+                                    Log.procname)
+        if procname is not None:
+            query = query.filter(Log.procname == procname)
+        rows = query.order_by(Log.id.desc()).\
+            limit(count).all()
+
+        return self._outputQueryRows(rows)
