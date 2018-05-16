@@ -151,6 +151,8 @@ def getLastJobs(connstr, procname=None, **kwargs):
 
     if kwargs.get('args') is None:
         count = 10
+    elif len(kwargs.get('args') == 0):
+        count = 10
     else:
         count = kwargs['args'][0]
 
