@@ -144,5 +144,5 @@ def getActiveJobs(connstr, procname=None, **kwargs):
 
     if procname == 'all':
         procname = None
-    return _dbAsText(DBOperator(connstr).getActiveJobs(procname))
+    return _dbAsText(*DBOperator(connstr).getActiveJobs(procname))
 
