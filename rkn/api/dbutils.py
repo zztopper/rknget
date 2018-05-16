@@ -81,7 +81,7 @@ def delCustomResource(connstr, entitytype, value, **kwargs):
         return "Entity type error"
 
 
-def findResource(connstr, entitytype, value, **kwargs):
+def findResource(connstr, entitytype=None, value, **kwargs):
     """
     Adds custom resource to the database's Resource table.
     :param connstr: smth like "engine://user:pswd@host:port/dbname"
@@ -125,3 +125,24 @@ def delContent(connstr, outer_id, **kwargs):
     :return: True if deleted, False otherwise
     """
     return DBOperator(connstr).delContent(outer_id)
+
+
+def unlockJobs(connstr, procname=None, **kwargs):
+    """
+    Sets exit_code and result of the all log entires with empty exit_code.
+    :param connstr: smth like "engine://user:pswd@host:port/dbname"
+    :param procname: specify procname to unlock
+    :return: ?
+    """
+    if procname == 'all':
+        procname = None
+
+    return DBOperator(connstr).unlockJobs(procname)
+
+
+def getActiveJobs(connstr, procname=None, **kwargs):
+
+    if procname == 'all':
+        procname = None
+    return _dbAsText(DBOperator(connstr).getActiveJobs(procname))
+

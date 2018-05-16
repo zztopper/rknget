@@ -35,5 +35,3 @@ class ProcData(DatabaseHandler):
         row.result = result
         self._session.commit()
         return row.id
-
-

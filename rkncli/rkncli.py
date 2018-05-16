@@ -38,6 +38,15 @@ CLI_DICT = {
                         'func': 'getContent',
                         'help': 'Add \'full\' to show resource info'
                         }
+                },
+    'process': {'del': {'args': ['procname'],
+                        'func': 'unlockJobs',
+                        'help': 'Set \'all\' to clean all jobs.'
+                        },
+                'get': {'args': ['procname'],
+                        'func': 'getActiveJobs',
+                        'help': 'Set \'all\' to show all jobs.'
+                        }
                 }
 }
 

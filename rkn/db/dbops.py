@@ -144,3 +144,24 @@ class DBOperator(DataProcessor):
         return {
             f: getattr(row, f) for f in fields
         }
+
+    def unlockJobs(self, procname=None):
+        query = self._session.query(Log). \
+            filter(Log.exit_code is None)
+        if procname is not None:
+            query = query.filter(Log.procname == procname)
+
+        result = query.update({'exit_code': 255, 'result': 'Supressed'},
+                              synchronize_session=False)
+        return result
+
+    def getActiveJobs(self, procname=None):
+        query = self._session.query(Log.id,
+                                    Log.start_time,
+                                    Log.procname). \
+            filter(Log.exit_code is None)
+        if procname is not None:
+            query = query.filter(Log.procname == procname)
+        rows = query.order_by(DumpInfo.id.desc()).all()
+
+        return self._outputQueryRows(rows)
