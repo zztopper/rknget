@@ -75,6 +75,11 @@ def main():
                                                method='getBlockedIPs',
                                                collapse=config['Bird']['collapse'],
                                                **config['API'])
+        # Checking limit
+        if len(ipsublist) > config['Bird']['limit']:
+            logger.warning('Limit exceeded: ' + str(len(ipsublist)) + ' routes')
+            ipsublist = ipsublist[-config['Bird']['limit']:]
+
         logger.info('Updating bird configuration and restarting daemon...')
         # Updating BGP casts
         updateBirdConfig(ipsublist=ipsublist,

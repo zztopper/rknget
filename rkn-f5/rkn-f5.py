@@ -164,6 +164,7 @@ def main():
         # Truncating entries if too many.
         if len(urlsSet) > config['Extra']['truncate-after']:
             logger.debug('Truncating entries: ' + str(len(urlsSet) - config['Extra']['truncate-after']))
+            # For now it's a list.
             urlsSet = list(urlsSet)[-config['Extra']['truncate-after']:]
 
         logger.info('Entries being blocked: ' + str(len(urlsSet)))

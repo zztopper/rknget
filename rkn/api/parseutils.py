@@ -101,6 +101,13 @@ def isdomain(s):
     return __domregex.fullmatch(s) is not None
 
 
+def isprivate(s):
+    try:
+        return ipaddress.ip_network(s).is_private
+    except ValueError:
+        return False
+
+
 def getSubnetIPs(s):
     try:
         return ipaddress.ip_network(s).hosts()

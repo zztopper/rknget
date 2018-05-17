@@ -102,10 +102,14 @@ def parse(xmldump, connstr):
                 elif tag == 'ip':
                     if not parseutils.isip(element.text):
                         continue
+                    if parseutils.isprivate(element.text):
+                        continue
                     entitytype = 'ip'
                     value = element.text
                 elif tag == 'ipSubnet':
                     if not parseutils.isipsub(element.text):
+                        continue
+                    if parseutils.isprivate(element.text):
                         continue
                     entitytype = 'ipsubnet'
                     value = element.text
