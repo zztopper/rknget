@@ -42,7 +42,6 @@ def getUnboundLocalDomains(binarypath, stubip, **kwargs):
                 continue
             wdomains.add(rowdata[0][:-1])
 
-
     return domains, wdomains
 
 
@@ -54,9 +53,12 @@ def addUnboundZones(binarypath, stubip, domainset, zonetype, **kwargs):
     :param zonetype: 'static', 'redirect', 'transparent', etc. See unbound.conf manuals.
     :return: blocked domains count
     """
+    # One-by-one adding
     # for domain in domainset:
     #     subprocess.call([binarypath, 'local_zone', domain, zonetype], stdout=devnull)
     #     subprocess.call([binarypath, 'local_data', domain + '. IN A ' + stubip], stdout=devnull)
+    if len(domainset) == 0:
+        return
     devnull = open(os.devnull, "w")
     stdin = (' ' + zonetype + '\n').join(domainset) + ' ' + zonetype + '\n'
     s = subprocess.Popen([binarypath, 'local_zones'],
@@ -70,7 +72,6 @@ def addUnboundZones(binarypath, stubip, domainset, zonetype, **kwargs):
                          stdin=subprocess.PIPE,
                          encoding='UTF8')
     s.communicate(input=stdin)
-    return len(domainset)
 
 
 def delUnboundZones(binarypath, domainset, **kwargs):
@@ -80,6 +81,8 @@ def delUnboundZones(binarypath, domainset, **kwargs):
     :param domainset: domains set
     :return: blocked domains count
     """
+    if len(domainset) == 0:
+        return
     devnull = open(os.devnull, "w")
     stdin = '\n'.join(domainset) + '\n'
     s = subprocess.Popen([binarypath, 'local_zones_remove'],
@@ -87,8 +90,6 @@ def delUnboundZones(binarypath, domainset, **kwargs):
                          stdin=subprocess.PIPE,
                          encoding='UTF8')
     s.communicate(input=stdin)
-
-    return len(domainset)
 
 
 def buildUnboundConfig(confpath, stubip, domainset, wdomainset, **kwargs):
@@ -150,17 +151,37 @@ def main():
         wdomainBlockSet = set(wdomainBlockSet)
 
         logger.info('Banning...')
-        addDcount = addUnboundZones(domainset=domainBlockSet - domainUBCSet,
-                                    zonetype='static',
-                                    **config['Unbound'])
-        addWDcount = addUnboundZones(domainset=wdomainBlockSet - wdomainUBCSet,
-                                     zonetype='redirect',
-                                     **config['Unbound'])
+        result = ['Unbound updates:']
+
+        domainset = domainBlockSet - domainUBCSet
+        addUnboundZones(domainset=domainset,
+                        zonetype='static',
+                        **config['Unbound'])
+        logger.debug('Strict banned: ' + ' '.join(map(str, domainset)))
+        result.append('Strict banned: ' + str(len(domainset)))
+
+        domainset = wdomainBlockSet - wdomainUBCSet
+        addUnboundZones(domainset=domainset,
+                        zonetype='redirect',
+                        **config['Unbound'])
+        logger.debug('Wildcard banned: ' + ' '.join(map(str, domainset)))
+        result.append('Wildcard banned: ' + str(len(domainset)))
+
         logger.info('Unbanning...')
-        delDcount = delUnboundZones(domainset=domainUBCSet - domainBlockSet,
-                                    **config['Unbound'])
-        delWDcount = delUnboundZones(domainset=wdomainUBCSet - wdomainBlockSet,
-                                     **config['Unbound'])
+
+        domainset = domainUBCSet - domainBlockSet
+        delUnboundZones(domainset=domainset,
+                        zonetype='static',
+                        **config['Unbound'])
+        logger.debug('Strict unbanned: ' + ' '.join(map(str, domainset)))
+        result.append('Strict unbanned: ' + str(len(domainset)))
+
+        domainset = wdomainUBCSet - wdomainBlockSet
+        delUnboundZones(domainset=domainset,
+                        zonetype='redirect',
+                        **config['Unbound'])
+        logger.debug('Wildcard unbanned: ' + ' '.join(map(str, domainset)))
+        result.append('Wildcard unbanned: ' + str(len(domainset)))
 
         logger.info('Generating permanent config...')
         buildUnboundConfig(domainset=domainBlockSet,
@@ -170,12 +191,7 @@ def main():
         if config['Global']['saveconf']:
             shutil.copy(config['Unbound']['confpath'],
                         config['Global']['tmppath'])
-        result = ['Unbound updates:',
-                  'added: ' + str(addDcount),
-                  'added_wildcard: ' + str(addWDcount),
-                  'deleted: ' + str(delDcount),
-                  'deleted_wildcard: ' + str(delWDcount)
-                  ]
+
         logger.info(', '.join(result))
         webconn.call(module='api.procutils',
                      method='finishJob',
