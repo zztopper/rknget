@@ -19,21 +19,19 @@ def getUnboundLocalDomains(binarypath, stubip, **kwargs):
     :return: domains set
     """
     proc = subprocess.Popen(args=[binarypath, 'list_local_data'],
-                            encoding='UTF8',
                             stdout=subprocess.PIPE)
     # Filtered RKN domains
     domains = set()
-    for stdoutrow in proc.communicate()[0].split('\n'):
+    for stdoutrow in proc.communicate()[0].decode().split('\n'):
         rowdata = stdoutrow.split('\t')
         if len(rowdata) == 5 and rowdata[4] == stubip:
             domains.add(rowdata[0][:-1])
     #
     proc = subprocess.Popen(args=[binarypath, 'list_local_zones'],
-                            encoding='UTF8',
                             stdout=subprocess.PIPE)
 
     wdomains = set()
-    for stdoutrow in proc.communicate()[0].split('\n'):
+    for stdoutrow in proc.communicate()[0].decode().split('\n'):
         rowdata = stdoutrow.split(' ')
         if len(rowdata) == 2 and rowdata[1] == 'redirect':
             try:
@@ -63,15 +61,13 @@ def addUnboundZones(binarypath, stubip, domainset, zonetype, **kwargs):
     stdin = (' ' + zonetype + '\n').join(domainset) + ' ' + zonetype + '\n'
     s = subprocess.Popen([binarypath, 'local_zones'],
                          stdout=devnull,
-                         stdin=subprocess.PIPE,
-                         encoding='UTF8')
-    s.communicate(input=stdin)
+                         stdin=subprocess.PIPE)
+    s.communicate(input=stdin.encode())
     stdin = ('. IN A ' + stubip + '\n').join(domainset) + '. IN A ' + stubip + '\n'
     s = subprocess.Popen([binarypath, 'local_datas'],
                          stdout=devnull,
-                         stdin=subprocess.PIPE,
-                         encoding='UTF8')
-    s.communicate(input=stdin)
+                         stdin=subprocess.PIPE)
+    s.communicate(input=stdin.encode())
 
 
 def delUnboundZones(binarypath, domainset, **kwargs):
@@ -87,9 +83,8 @@ def delUnboundZones(binarypath, domainset, **kwargs):
     stdin = '\n'.join(domainset) + '\n'
     s = subprocess.Popen([binarypath, 'local_zones_remove'],
                          stdout=devnull,
-                         stdin=subprocess.PIPE,
-                         encoding='UTF8')
-    s.communicate(input=stdin)
+                         stdin=subprocess.PIPE)
+    s.communicate(input=stdin.encode())
 
 
 def buildUnboundConfig(confpath, stubip, domainset, wdomainset, **kwargs):
