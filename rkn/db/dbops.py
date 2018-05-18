@@ -18,8 +18,8 @@ class DBOperator(DataProcessor):
         super(DBOperator, self).__init__(connstr)
         self._resourceQuery = self._session.query(Resource.id,
                                                   Content.outer_id,
-                                                  Entitytype.name,
-                                                  BlockType.name,
+                                                  Entitytype.name.label('entitytype'),
+                                                  BlockType.name.label('blocktype'),
                                                   Resource.is_custom,
                                                   Resource.is_blocked,
                                                   Resource.value). \
