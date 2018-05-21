@@ -31,17 +31,18 @@ def urlHandler(urlstr):
     # Some magic with url parts after domain
     urlmap = map(
         lambda urlpart, char:
-            char + urllib.parse.quote(string=urlpart, safe='''~@#$&()*!+=:;,.?/\%''')
+            char + urllib.parse.quote(string=urlpart, safe=''':/?#[]@!$&'()*+,;=\%''')
             if urlpart != '' else '',
         parsedUrl[2:], ['', ';', '?', '#']
     )
     # pathEncoded = '/' + urllib.parse.quote(string=parsedUrl.path, safe='~@#$&()*!+=:;,.?/\%\\') \
     #     if parsedUrl.path != '' else ''
-    # parmEncoded = urllib.parse.quote(string=parsedUrl.params, safe='~@#$&()*!+=:;,.?/\%\\')
+    # parmEncoded = url   lib.parse.quote(string=parsedUrl.params, safe='~@#$&()*!+=:;,.?/\%\\')
     # querEncoded = urllib.parse.quote(string=parsedUrl.query,  safe='~@#$&()*!+=:;,.?/\%\\')
     # fragEncoded = urllib.parse.quote(string=parsedUrl.fragment,  safe='~@#$&()*!+=:;,.?/\%\\')
 
     return parsedUrl[0] + '://' + punedomain + port + ''.join(list(urlmap))
+
 
 def domainCorrect(s):
     """
