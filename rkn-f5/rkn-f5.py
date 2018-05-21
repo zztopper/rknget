@@ -134,19 +134,19 @@ def main():
         # Don't apply lstrip('http://') for this.
         # Using particular case for http
         httpstrip = lambda x: x[7:] if x.find('http://') == 0 else x
-        urlsSet = {httpstrip(url) for url in
-                   webconn.call(module='api.restrictions',
-                                method='getBlockedHTTP',
-                                **config['API'])
+        urlsSet = {httpstrip(url).encode('unicode-escape').decode()
+                   for url in webconn.call(module='api.restrictions',
+                                           method='getBlockedHTTP',
+                                           **config['API'])
                    }
         if config['Extra']['https']:
             # Using particular case for https
             httpsstrip = lambda x: x[8:] if x.find('https://') == 0 else x
             urlsSet.update(
-                {httpsstrip(url) for url in
-                 webconn.call(module='api.restrictions',
-                              method='getBlockedHTTPS',
-                              **config['API'])
+                {httpsstrip(url).encode('unicode-escape').decode()
+                 for url in webconn.call(module='api.restrictions',
+                                         method='getBlockedHTTPS',
+                                         **config['API'])
                  }
             )
         if config['Extra']['domain']:
