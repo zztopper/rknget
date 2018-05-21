@@ -2,9 +2,12 @@ import urllib.parse
 import re
 import ipaddress
 
-# IDNA encoding can fail for too long labels (>63 characters)
-# See: https://en.wikipedia.org/wiki/Internationalized_domain_name
+
 def punencodedom(urlstr):
+    """
+    IDNA encoding can fail for too long labels (>63 characters)
+    See: https://en.wikipedia.org/wiki/Internationalized_domain_name
+    """
     return urlstr.encode('idna').decode()
 
 
@@ -14,13 +17,6 @@ def getdomain(urlstr):
 
 # More goddamn hardcode to the Hardcode God!
 def urlHandler(urlstr):
-    """
-    Common rules:
-        - proto, colon, two slashes are trunkated | http://, https://
-        - % sign is considered to be already encoded
-        - result is complemented by asterisks | *...*
-    :return:
-    """
     parsedUrl = urllib.parse.urlparse(urlstr)
     # Erroneous proto is assumed to be http.
     if parsedUrl[0] != 'http' and parsedUrl[0] != 'https':
@@ -35,7 +31,7 @@ def urlHandler(urlstr):
     # Some magic with url parts after domain
     urlmap = map(
         lambda urlpart, char:
-            char + urllib.parse.quote(string=urlpart, safe='~@#$&()*!+=:;,.?/\%\\')
+            char + urllib.parse.quote(string=urlpart, safe='''~@#$&()*!+=:;,.?/\%''')
             if urlpart != '' else '',
         parsedUrl[2:], ['', ';', '?', '#']
     )
