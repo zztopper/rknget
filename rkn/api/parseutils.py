@@ -12,6 +12,7 @@ def punencodedom(urlstr):
 
 
 def getdomain(urlstr):
+    # Domains are case insensitive, URLs are case sensitive
     return urllib.parse.urlparse(urlstr).netloc.split(':')[0].lower()
 
 
@@ -26,7 +27,8 @@ def urlHandler(urlstr):
         port = ':' + parsedUrl.netloc.split(':')[1]
     else:
         port = ''
-    punedomain = punencodedom(domain)
+    # Domains are case insensitive, URLs are case sensitive
+    domain = punencodedom(domain).lower()
 
     # Some magic with url parts after domain
     urlmap = map(
@@ -41,7 +43,7 @@ def urlHandler(urlstr):
     # querEncoded = urllib.parse.quote(string=parsedUrl.query,  safe='~@#$&()*!+=:;,.?/\%\\')
     # fragEncoded = urllib.parse.quote(string=parsedUrl.fragment,  safe='~@#$&()*!+=:;,.?/\%\\')
 
-    return parsedUrl[0] + '://' + punedomain + port + ''.join(list(urlmap))
+    return parsedUrl[0] + '://' + domain + port + ''.join(list(urlmap))
 
 
 def domainCorrect(s):
