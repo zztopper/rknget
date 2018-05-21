@@ -13,6 +13,7 @@ import os
 import io
 import zipfile
 
+sys.path.append('../')
 sys.path.append('../rkn')
 from api import dumpparse, blocking, procutils
 from dbconn import connstr
