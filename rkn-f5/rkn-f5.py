@@ -90,6 +90,17 @@ def saveF5config(host, port, secure, timeout, user, password, **kwargs):
     return True
 
 
+# Lambda is:
+# strstrip = lambda x, s: x[len(s):] if x.find(s) == 0 else x
+def strstrip(x, s):
+    """
+    Beheads x of s, e.g.: 'stringstr', 'str' -> 'ingstr'
+    :param x: stripped string
+    :param s: stripping string
+    """
+    return x[len(s):] if x.find(s) == 0 else x
+
+
 def main():
     configPath = utils.confpath_argv()
     if configPath is None:
@@ -120,15 +131,19 @@ def main():
     try:
         # Fetching http restrictions
         logger.info('Fetching restrictions list from DB')
-
-        urlsSet = {url.lstrip('http://') for url in
+        # Don't apply lstrip('http://') for this.
+        # Using particular case for http
+        httpstrip = lambda x: x[7:] if x.find('http://') == 0 else x
+        urlsSet = {httpstrip(url) for url in
                    webconn.call(module='api.restrictions',
                                 method='getBlockedHTTP',
                                 **config['API'])
                    }
         if config['Extra']['https']:
+            # Using particular case for https
+            httpsstrip = lambda x: x[8:] if x.find('https://') == 0 else x
             urlsSet.update(
-                {url.lstrip('https://') for url in
+                {httpsstrip(url) for url in
                  webconn.call(module='api.restrictions',
                               method='getBlockedHTTPS',
                               **config['API'])
