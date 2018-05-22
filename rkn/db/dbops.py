@@ -26,6 +26,7 @@ class DBOperator(DataProcessor):
             outerjoin(Content, Resource.content_id == Content.id). \
             join(Entitytype, Resource.entitytype_id == Entitytype.id). \
             outerjoin(BlockType, Content.blocktype_id == BlockType.id)
+
         DumpInfoA = aliased(DumpInfo, name='DumpInfoA')
         self._contentQuery = self._session.query(Content.id,
                                                  Content.outer_id,
@@ -37,6 +38,12 @@ class DBOperator(DataProcessor):
             join(BlockType, Content.blocktype_id == BlockType.id). \
             join(DumpInfo, Content.first_dump_id == DumpInfo.id). \
             join(DumpInfoA, Content.last_dump_id == DumpInfoA.id)
+
+        self._decisionQuery = self._session.query(Decision.id,
+                                                  Decision.decision_code,
+                                                  Decision.decision_date,
+                                                  Organisation.name). \
+            join(Organisation, Decision.org_id == Organisation.id)
 
     def addCustomResource(self, entitytype, value):
         """
@@ -178,3 +185,14 @@ class DBOperator(DataProcessor):
             limit(count).all()
 
         return self._outputQueryRows(rows)
+
+    def getDecisionByID(self, de_id, *args):
+        rows = self._decisionQuery. \
+            filter(Decision.id == de_id).all()
+        return self._outputQueryRows(rows, *args)
+
+    def getDecisionByContentID(self, content_id, *args):
+        rows = self._decisionQuery. \
+            outerjoin(Content, Decision.id == Content.decision_id). \
+            filter(Content.content_id == content_id).all()
+        return self._outputQueryRows(rows, *args)

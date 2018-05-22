@@ -108,12 +108,10 @@ def getContent(connstr, outer_id, **kwargs):
 
 
 def showDumpStats(connstr, **kwargs):
-
     return _dbAsText(*DBOperator(connstr).getBlockCounters())
 
 
 def showDumpInfo(connstr, **kwargs):
-
     return '\n'.join(str(k).ljust(16) + '\t' + str(v)
                      for k, v in DBOperator(connstr).getLastDumpInfo().items())
 
@@ -141,7 +139,6 @@ def unlockJobs(connstr, procname=None, **kwargs):
 
 
 def getActiveJobs(connstr, procname=None, **kwargs):
-
     if procname == 'all':
         procname = None
     return _dbAsText(*DBOperator(connstr).getActiveJobs(procname))
@@ -161,3 +158,10 @@ def getLastJobs(connstr, procname=None, **kwargs):
 
     return _dbAsText(*DBOperator(connstr).getLastJobs(procname, count))
 
+
+def getDecsnInfo(connstr, de_id, **kwargs):
+    return _dbAsText(*DBOperator(connstr).getDecisionByID(de_id))
+
+
+def getContentDecsn(connstr, outer_id, **kwargs):
+    return _dbAsText(*DBOperator(connstr).getDecisionByContentID(outer_id))

@@ -52,7 +52,15 @@ CLI_DICT = {
                         'help': 'Set \'all\' to show all processes. ' +
                                 'Point number of rows, else the last 10 will be shown'
                         }
-                }
+                },
+    'decision': {'info': {'args': ['de_id'],
+                          'func': 'getDecsnInfo',
+                          },
+                 'get': {'args': ['outer_id'],
+                         'func': 'getContentDecsn',
+                         'help': 'Search by content outer_id'
+                         },
+                 }
 }
 
 
