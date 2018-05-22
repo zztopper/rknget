@@ -191,8 +191,8 @@ class DBOperator(DataProcessor):
             filter(Decision.id == de_id).all()
         return self._outputQueryRows(rows, *args)
 
-    def getDecisionByContentID(self, content_id, *args):
+    def getDecisionByOuterID(self, outer_id, *args):
         rows = self._decisionQuery. \
             outerjoin(Content, Decision.id == Content.decision_id). \
-            filter(Content.id == content_id).all()
+            filter(Content.outer_id == outer_id).all()
         return self._outputQueryRows(rows, *args)
