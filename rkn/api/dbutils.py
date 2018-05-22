@@ -163,5 +163,5 @@ def getDecsnInfo(connstr, de_id, **kwargs):
     return _dbAsText(*DBOperator(connstr).getDecisionByID(de_id))
 
 
-def getContentDecsn(connstr, outer_id, **kwargs):
-    return _dbAsText(*DBOperator(connstr).getDecisionByContentID(outer_id))
+def getDecisionByID(connstr, outer_id, **kwargs):
+    return _dbAsText(*DBOperator(connstr).getDecisionByOuterID(outer_id))

@@ -57,7 +57,7 @@ CLI_DICT = {
                           'func': 'getDecsnInfo',
                           },
                  'get': {'args': ['outer_id'],
-                         'func': 'getContentDecsn',
+                         'func': 'getDecisionByID',
                          'help': 'Search by content outer_id'
                          },
                  }
