@@ -6,7 +6,6 @@ from http.client import HTTPConnection, HTTPSConnection
 import base64
 import json
 import ssl
-from re import escape
 
 sys.path.append('../')
 from common import webconn, utils
@@ -135,7 +134,7 @@ def main():
         # Don't apply lstrip('http://') for this.
         # Using particular case for http
         httpstrip = lambda x: x[7:] if x.find('http://') == 0 else x
-        urlsSet = {escape(httpstrip(url))
+        urlsSet = {httpstrip(url).encode('unicode-escape').decode()
                    for url in webconn.call(module='api.restrictions',
                                            method='getBlockedHTTP',
                                            **config['API'])
@@ -144,7 +143,7 @@ def main():
             # Using particular case for https
             httpsstrip = lambda x: x[8:] if x.find('https://') == 0 else x
             urlsSet.update(
-                {escape(httpsstrip(url))
+                {httpsstrip(url).encode('unicode-escape').decode()
                  for url in webconn.call(module='api.restrictions',
                                          method='getBlockedHTTPS',
                                          **config['API'])
