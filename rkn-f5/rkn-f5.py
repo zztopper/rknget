@@ -102,11 +102,12 @@ def strstrip(x, s):
     return x[len(s):] if x.find(s) == 0 else x
 
 
-BASH_CHARS = '''\#*'";[]'''
+BASH_CHARS = '''#*'";[]'''
 
 
 # Written in C, it would be faster.
-# Implemented nowhere yet.
+# Turned off yet.
+# Backslash is already escaped by json parser.
 def escapechars(s):
     for c in BASH_CHARS:
         ce = '\\' + c
