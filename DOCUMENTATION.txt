@@ -243,3 +243,4 @@ decision info - то же самое, но по decision id
 ./rkncli.py resource add domain playtunez.com - добавление custom ресурса типа domain
 ./rkncli.py resource find domain 'rutracker.org' outer_id is_blocked | grep True - поиск внешнего ID нужного ресурса
 ./rkncli.py content get 262698 - информация о строке content по известному внешнему ID
+./rkncli.py decision get 262698 - информация об основании блокировки
