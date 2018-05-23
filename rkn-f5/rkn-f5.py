@@ -111,7 +111,8 @@ BASH_CHARS = '''#*'";[]'''
 def escapechars(s):
     for c in BASH_CHARS:
         ce = '\\' + c
-        s = s.replace(s, ce)
+        s = s.replace(c, ce)
+    return s
 
 
 def main():
