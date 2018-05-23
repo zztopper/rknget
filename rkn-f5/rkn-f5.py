@@ -90,6 +90,7 @@ def saveF5config(host, port, secure, timeout, user, password, **kwargs):
     return True
 
 
+# Implemented nowhere, the program uses inline lambdas for specific strings
 # Lambda is:
 # strstrip = lambda x, s: x[len(s):] if x.find(s) == 0 else x
 def strstrip(x, s):
@@ -99,6 +100,17 @@ def strstrip(x, s):
     :param s: stripping string
     """
     return x[len(s):] if x.find(s) == 0 else x
+
+
+BASH_CHARS = '''\#*'";[]'''
+
+
+# Written in C, it would be faster.
+# Implemented nowhere yet.
+def escapechars(s):
+    for c in BASH_CHARS:
+        ce = '\\' + c
+        s = s.replace(s, ce)
 
 
 def main():
@@ -134,7 +146,7 @@ def main():
         # Don't apply lstrip('http://') for this.
         # Using particular case for http
         httpstrip = lambda x: x[7:] if x.find('http://') == 0 else x
-        urlsSet = {httpstrip(url).encode('unicode-escape').decode()
+        urlsSet = {httpstrip(url)
                    for url in webconn.call(module='api.restrictions',
                                            method='getBlockedHTTP',
                                            **config['API'])
@@ -143,7 +155,7 @@ def main():
             # Using particular case for https
             httpsstrip = lambda x: x[8:] if x.find('https://') == 0 else x
             urlsSet.update(
-                {httpsstrip(url).encode('unicode-escape').decode()
+                {httpsstrip(url)
                  for url in webconn.call(module='api.restrictions',
                                          method='getBlockedHTTPS',
                                          **config['API'])
