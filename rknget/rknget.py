@@ -61,7 +61,7 @@ def main():
                                            **config['API'])
 
             if parsed_recently:
-                result = 'Last dump is relevant'
+                result = 'The latest dump is relevant'
                 logger.info(result)
                 # Updating the state in database
                 webconn.call(module='api.procutils',
