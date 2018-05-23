@@ -32,7 +32,6 @@ class DBOperator(DataProcessor):
                                                  Content.outer_id,
                                                  Content.include_time,
                                                  Content.in_dump,
-                                                 Content.decision_id,
                                                  Resource.is_blocked,
                                                  DumpInfo.parse_time.label('first_time'),
                                                  DumpInfoA.parse_time.label('last_time')). \
