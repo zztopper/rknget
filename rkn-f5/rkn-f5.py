@@ -18,6 +18,19 @@ def _base64httpcreds(user, password):
     return base64.b64encode((str(user) + ':' + str(password)).encode()).decode('ascii')
 
 
+BASH_CHARS = '''#*'";[]~'''
+
+
+# Written in C, it would be faster.
+# Turned off yet.
+# Backslash is already escaped by json parser.
+def escapechars(s):
+    for c in BASH_CHARS:
+        ce = '\\' + c
+        s = s.replace(c, ce)
+    return s
+
+
 def updateF5datagroup(host, port, secure, timeout, datagroup, user, password, urls, **kwargs):
     """
     :param urls: iterable set of URLs, without proto
@@ -25,14 +38,14 @@ def updateF5datagroup(host, port, secure, timeout, datagroup, user, password, ur
     :return: True/False and short result
     """
     # Preparing data to put
-    jsondata = json.dumps(
+    jsondata = escapechars(json.dumps(
         {'records':
             [
                 {'name': url, 'data': ''}
                 for url in urls
             ]
         }
-    )
+    ))
     if secure:
         conn = HTTPSConnection(host=host, port=port, timeout=timeout,
                                context=ssl._create_unverified_context())
@@ -102,19 +115,6 @@ def strstrip(x, s):
     return x[len(s):] if x.find(s) == 0 else x
 
 
-BASH_CHARS = '''#*'";[]'''
-
-
-# Written in C, it would be faster.
-# Turned off yet.
-# Backslash is already escaped by json parser.
-def escapechars(s):
-    for c in BASH_CHARS:
-        ce = '\\' + c
-        s = s.replace(c, ce)
-    return s
-
-
 def main():
     configPath = utils.confpath_argv()
     if configPath is None:
@@ -148,7 +148,7 @@ def main():
         # Don't apply lstrip('http://') for this.
         # Using particular case for http
         httpstrip = lambda x: x[7:] if x.find('http://') == 0 else x
-        urlsSet = {escapechars(httpstrip(url))
+        urlsSet = {httpstrip(url)
                    for url in webconn.call(module='api.restrictions',
                                            method='getBlockedHTTP',
                                            **config['API'])
@@ -157,7 +157,7 @@ def main():
             # Using particular case for https
             httpsstrip = lambda x: x[8:] if x.find('https://') == 0 else x
             urlsSet.update(
-                {escapechars(httpsstrip(url))
+                {httpsstrip(url)
                  for url in webconn.call(module='api.restrictions',
                                          method='getBlockedHTTPS',
                                          **config['API'])

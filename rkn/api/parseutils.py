@@ -33,7 +33,7 @@ def urlHandler(urlstr):
     # Some magic with url parts after domain
     urlmap = map(
         lambda urlpart, char:
-            char + urllib.parse.quote(string=urlpart, safe=''':/?#[]@!$&'()*+,;=%''')
+            char + urllib.parse.quote(string=urlpart, safe=''':/?#[]@!$&'()*+,;=%~''')
             if urlpart != '' else '',
         parsedUrl[2:], ['', ';', '?', '#']
     )
