@@ -38,14 +38,14 @@ def updateF5datagroup(host, port, secure, timeout, datagroup, user, password, ur
     :return: True/False and short result
     """
     # Preparing data to put
-    jsondata = escapechars(json.dumps(
+    jsondata = json.dumps(
         {'records':
             [
                 {'name': url, 'data': ''}
                 for url in urls
             ]
         }
-    ))
+    )
     if secure:
         conn = HTTPSConnection(host=host, port=port, timeout=timeout,
                                context=ssl._create_unverified_context())
