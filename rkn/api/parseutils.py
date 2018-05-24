@@ -31,11 +31,12 @@ def urlHandler(urlstr):
     domain = punencodedom(domain).lower()
 
     # Some magic with url parts after domain
+    # Truncating fragment
     urlmap = map(
         lambda urlpart, char:
             char + urllib.parse.quote(string=urlpart, safe=''':/?#[]@!$&'()*+,;=%~''')
             if urlpart != '' else '',
-        parsedUrl[2:], ['', ';', '?', '#']
+        parsedUrl[2:-1], ['', ';', '?']
     )
     # pathEncoded = '/' + urllib.parse.quote(string=parsedUrl.path, safe='~@#$&()*!+=:;,.?/\%\\') \
     #     if parsedUrl.path != '' else ''

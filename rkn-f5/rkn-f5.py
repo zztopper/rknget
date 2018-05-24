@@ -18,7 +18,7 @@ def _base64httpcreds(user, password):
     return base64.b64encode((str(user) + ':' + str(password)).encode()).decode('ascii')
 
 
-BASH_CHARS = '''#*'";[]~'''
+BASH_CHARS = '''*'";[]'''
 
 
 # Written in C, it would be faster.
