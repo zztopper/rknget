@@ -159,6 +159,10 @@ def getLastJobs(connstr, procname=None, **kwargs):
     return _dbAsText(*DBOperator(connstr).getLastJobs(procname, count))
 
 
+def getLastExitCode(connstr, procname, **kwargs):
+    return DBOperator(connstr).getLastExitCode(procname)
+
+
 def getDecsnInfo(connstr, de_id, **kwargs):
     return _dbAsText(*DBOperator(connstr).getDecisionByID(de_id))
 

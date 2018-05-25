@@ -32,7 +32,6 @@ class DBOperator(DataProcessor):
                                                  Content.outer_id,
                                                  Content.include_time,
                                                  Content.in_dump,
-                                                 Resource.is_blocked,
                                                  DumpInfo.parse_time.label('first_time'),
                                                  DumpInfoA.parse_time.label('last_time')). \
             join(BlockType, Content.blocktype_id == BlockType.id). \
@@ -185,6 +184,15 @@ class DBOperator(DataProcessor):
             limit(count).all()
 
         return self._outputQueryRows(rows)
+
+    def getLastExitCode(self, procname):
+        query = self._session.query(Log.exit_code).\
+            filter(Log.procname == procname). \
+            order_by(Log.id.desc()).\
+            limit(1)
+        row = query.first()
+
+        return row.exit_code
 
     def getDecisionByID(self, de_id, *args):
         rows = self._decisionQuery. \
