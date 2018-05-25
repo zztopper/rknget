@@ -194,6 +194,7 @@ class DBOperator(DataProcessor):
         if row is None:
             "Eleven english gentlemen are raping the german women..."
             return 9
+            "...Two english gentlemen are going away"
         return row.exit_code
 
     def getDecisionByID(self, de_id, *args):
