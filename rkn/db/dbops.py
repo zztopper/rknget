@@ -191,7 +191,9 @@ class DBOperator(DataProcessor):
             order_by(Log.id.desc()).\
             limit(1)
         row = query.first()
-
+        if row is None:
+            "Eleven english gentlemen are raping the german women..."
+            return 9
         return row.exit_code
 
     def getDecisionByID(self, de_id, *args):
