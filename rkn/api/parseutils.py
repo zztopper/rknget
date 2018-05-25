@@ -38,8 +38,8 @@ def urlHandler(urlstr):
             if urlpart != '' else '',
         parsedUrl[2:-1], ['', ';', '?']
     )))
-
-    if urlstr[-1] in (';', '?'):
+    # If the char appears once and is the last.
+    if urlstr.find('?') == len(urlstr) - 1 or urlstr.find(';') == len(urlstr) - 1:
         urllet = urllet + urlstr[-1]
 
     return parsedUrl[0] + '://' + domain + port + urllet
