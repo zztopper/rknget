@@ -18,13 +18,13 @@ def getdomain(urlstr):
 
 # More goddamn hardcode to the Hardcode God!
 def urlHandler(urlstr):
-    parsedUrl = urllib.parse.urlparse(urlstr)
+    parsedUrl = list(urllib.parse.urlparse(urlstr))
     # Erroneous proto is assumed to be http.
     if parsedUrl[0] != 'http' and parsedUrl[0] != 'https':
         parsedUrl[0] = 'http'
-    domain = parsedUrl.netloc.split(':')[0]
-    if parsedUrl.netloc.find(':') != -1:
-        port = ':' + parsedUrl.netloc.split(':')[1]
+    domain = parsedUrl[1].split(':')[0]
+    if parsedUrl[1].find(':') != -1:
+        port = ':' + parsedUrl[1].split(':')[1]
     else:
         port = ''
     # Domains are case insensitive, URLs are case sensitive
@@ -32,19 +32,17 @@ def urlHandler(urlstr):
 
     # Some magic with url parts after domain
     # Truncating fragment
-    urlmap = map(
+    urllet = ''.join(list(map(
         lambda urlpart, char:
             char + urllib.parse.quote(string=urlpart, safe=''':/?#[]@!$&'()*+,;=%~''')
             if urlpart != '' else '',
         parsedUrl[2:-1], ['', ';', '?']
-    )
-    # pathEncoded = '/' + urllib.parse.quote(string=parsedUrl.path, safe='~@#$&()*!+=:;,.?/\%\\') \
-    #     if parsedUrl.path != '' else ''
-    # parmEncoded = url   lib.parse.quote(string=parsedUrl.params, safe='~@#$&()*!+=:;,.?/\%\\')
-    # querEncoded = urllib.parse.quote(string=parsedUrl.query,  safe='~@#$&()*!+=:;,.?/\%\\')
-    # fragEncoded = urllib.parse.quote(string=parsedUrl.fragment,  safe='~@#$&()*!+=:;,.?/\%\\')
+    )))
 
-    return parsedUrl[0] + '://' + domain + port + ''.join(list(urlmap))
+    if urlstr[-1] in (';', '?'):
+        urllet = urllet + urlstr[-1]
+
+    return parsedUrl[0] + '://' + domain + port + urllet
 
 
 def domainCorrect(s):
