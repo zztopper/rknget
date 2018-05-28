@@ -16,6 +16,7 @@ class DBMonitor(DataProcessor):
     def getLastExitCode(self, procname):
         query = self._session.query(Log.exit_code).\
             filter(Log.procname == procname). \
+            filter(Log.exit_code != None). \
             order_by(Log.id.desc()).\
             limit(1)
         row = query.first()
