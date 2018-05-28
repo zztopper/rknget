@@ -24,9 +24,9 @@ def main():
     # Shoot your leg through!!!
     data = getattr(module, metval)(**fields)
     try:
-        result = ''.join('[' + d + ']' for d in data)
+        result = ''.join('[' + str(d) + ']' for d in data)
     except TypeError:
-        result = '[' + data + ']'
+        result = '[' + str(data) + ']'
 
     print("Content-Type: text/plain\r\n\r\n")
     print(result)
