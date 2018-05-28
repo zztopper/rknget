@@ -1,4 +1,4 @@
-from db.dbops import DBMonitor
+from db.monitoring import DBMonitor
 from db.blockdata import BlockData
 import ipaddress
 
