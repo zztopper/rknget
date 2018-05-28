@@ -28,19 +28,6 @@ def _dbAsText(headers, rows):
     return '\n'.join(result)
 
 
-def testConn(connstr, **kwargs):
-    """
-    Tests a connection.
-    :param connstr: smth like "engine://user:pswd@host:port/dbname"
-    :return:
-    """
-    try:
-        DBOperator(connstr)
-        return 'OK'
-    except Exception as e:
-        return str(e)
-
-
 def addCustomResource(connstr, entitytype, value, **kwargs):
     """
     Adds custom resource to the database's Resource table.

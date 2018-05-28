@@ -56,9 +56,9 @@ def getBlockedIPs(connstr, collapse=True):
     ips = [ipaddress.ip_network(addr) for addr in bldt.getBlockedResourcesSet('ip')]
     ipsubs = [ipaddress.ip_network(addr) for addr in bldt.getBlockedResourcesSet('ipsubnet')]
     ipsall = ips + ipsubs
-    ipNum = sum(map(lambda x: x.num_addresses, ipsall))
     if collapse:
         ipsall = ipaddress.collapse_addresses(ipsall)
+    ipNum = sum(map(lambda x: x.num_addresses, ipsall))
     return [list(map(str, ipsall)), ipNum]
 
 

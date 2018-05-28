@@ -185,18 +185,6 @@ class DBOperator(DataProcessor):
 
         return self._outputQueryRows(rows)
 
-    def getLastExitCode(self, procname):
-        query = self._session.query(Log.exit_code).\
-            filter(Log.procname == procname). \
-            order_by(Log.id.desc()).\
-            limit(1)
-        row = query.first()
-        if row is None:
-            "Eleven english gentlemen are raping the german women..."
-            return 9
-            "...Two english gentlemen are going away"
-        return row.exit_code
-
     def getDecisionByID(self, de_id, *args):
         rows = self._decisionQuery. \
             filter(Decision.id == de_id).all()
