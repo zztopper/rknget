@@ -35,7 +35,7 @@
 3. Checkout
 3.1. Настройте подключение к БД в файле rkn/dbconn.py
 3.2. Можете проверить подключение запросом:
-http://hostname:port/cgi-bin/rknget/rkn/webapi.py?module=api.dbutils&method=testConn
+http://hostname:port/cgi-bin/rknget/rkn/webapi.py?module=api.monitoring&method=testConn
 3.3 Можете настроить SSL, хотя проверка сертификата клиентом принудительно игнорируется.
 
 Установка модулей:
