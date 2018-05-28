@@ -7,14 +7,14 @@ F5:
     secure: true
     datagroup: rcn_group
     user: admin
-    password: admin
+    password: password
     timeout: 60
   - host: 127.0.0.1
     port: 9443
     secure: true
     datagroup: rcn_group
     user: admin
-    password: admin
+    password: password
     timeout: 60
 
 Extra:
