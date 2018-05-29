@@ -244,3 +244,5 @@ decision info - то же самое, но по decision id
 ./rkncli.py resource find domain 'rutracker.org' outer_id is_blocked | grep True - поиск внешнего ID нужного ресурса
 ./rkncli.py content get 262698 - информация о строке content по известному внешнему ID
 ./rkncli.py decision get 262698 - информация об основании блокировки
+./rkncli.py process del all - разблокировка программ, вылетевших без кода завершения
+watch -n 10 './rkncli.py process last all 10' - мониторинг последних 10 запущенных программ
