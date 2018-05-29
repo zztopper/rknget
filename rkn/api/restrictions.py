@@ -67,6 +67,7 @@ def getBlockedDomains(connstr, collapse=True):
     We don't need to block domains if the same wildcard domain is blocked
     We don't need to block 3-level wildcard if 2-level wildcard is blocked
     :param connstr: smth like "engine://user:pswd@host:port/dbname"
+    :param collapse: merge domains if wildcard analogue exists
     :return: 2 sets: domains and wildcard domains
     """
     bldt = BlockData(connstr)
