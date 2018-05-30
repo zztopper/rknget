@@ -87,7 +87,7 @@ def getContent(connstr, outer_id, **kwargs):
     result = _dbAsText(headers, [row])
     if kwargs.get('args') is not None \
             and 'full' in kwargs.get('args') \
-            and row is not None:
+            and len(row) > 0:
         content_id = row[headers.index('id')]
         result = result + '\nRESOURCES\n'
         result = result + _dbAsText(*DBOperator(connstr).getResourceByContentID(content_id))
