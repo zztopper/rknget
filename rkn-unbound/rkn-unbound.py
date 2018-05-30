@@ -141,6 +141,8 @@ def main():
                                        method='getBlockedDomains',
                                        collapse=config['Unbound']['collapse'],
                                        **config['API'])
+        logger.info('Obtained ' + str(len(domainBlockSet)) + ' strict domains and ' +
+                    str(len(wdomainBlockSet)) + ' wildcard domains')
         # Lists were got, transforming
         domainBlockSet = set(domainBlockSet)
         wdomainBlockSet = set(wdomainBlockSet)
