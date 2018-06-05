@@ -113,6 +113,14 @@ def main():
             logger.info('Blocked ' + str(rows))
             rowsdict['Custom'] = rows
 
+        # Unblocking
+        whitelist = config['Miscellaneous']['whitelist']
+        if whitelist is not None:
+            logger.info('Unblocking whitelist')
+            rows = blocking.unblockSet(connstr, whitelist)
+            logger.info('Unblocked ' + str(rows))
+            rowsdict['Undone'] = rows
+
         # Updating the state in the database
         result = 'Blocking results\n' + '\n'.join(k + ':' + str(v) for k,v in rowsdict.items())
         procutils.finishJob(connstr, log_id, 0, result)

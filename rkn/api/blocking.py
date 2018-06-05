@@ -32,3 +32,14 @@ def blockCustom(connstr):
     :return: blocked rows count
     """
     return ResourceBlocker(connstr).blockCustom()
+
+
+def unblockSet(connstr, resSet):
+    """
+    Unblocking set of resources.
+    It may cause violations and bad consequences!
+    :param connstr: smth like "engine://user:pswd@host:port/dbname"
+    :param resSet: the set of resources
+    :return: blocked rows count
+    """
+    return ResourceBlocker(connstr).unblockSet(resSet)

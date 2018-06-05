@@ -49,6 +49,7 @@ class ResourceBlocker(DatabaseHandler):
 
     def _blockResourcesByIDs(self, idSet):
         """
+        Blocking resources by ID
         :param idSet: iterable
         """
         self._session.query(Resource).filter(Resource.id.in_(idSet)) \
@@ -114,27 +115,18 @@ class ResourceBlocker(DatabaseHandler):
             .update({'is_blocked': True}, synchronize_session=False)
         return rows_count_affected
 
+    def unblockSet(self, resSet):
+        """
+        Unblocking set of resources.
+        :return: blocked rows count
+        """
+        if len(resSet) == 0:
+            return 0
+        res_query = self._session.query(Resource)
+        res_filter = list()
+        for res in resSet:
+            res_filter.append(Resource.value.like('%' + res + '%'))
+        rows_count_affected = res_query.filter(or_(*res_filter)). \
+            update({'is_blocked': False}, synchronize_session=False)
+        return rows_count_affected
 
-    # def _blockHTTPSdomains(self):
-    #     """
-    #     Enables domain full blocking of https resources.
-    #     """
-    #     return self._blockRelated('https', 'domain')
-    #
-    # def _blockHTTPSips(self):
-    #     """
-    #     Enables IP blocking of https entities.
-    #     """
-    #     return self._blockRelated('https', 'ip')
-    #
-    # def _blockDommaskIPs(self):
-    #     """
-    #     Enables IP blocking of domain-mask entities.
-    #     """
-    #     return self._blockRelated('domain-mask', 'ip')
-    #
-    # def _blockDomainIPs(self):
-    #     """
-    #     Enables IP blocking of domain-mask entities.
-    #     """
-    #     return self._blockRelated('domain', 'ip')

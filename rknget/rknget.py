@@ -130,6 +130,17 @@ def main():
             logger.info('Blocked ' + str(rows))
             rowsdict['Custom'] = rows
 
+        # Unblocking
+        whitelist = config['Miscellaneous']['whitelist']
+        if whitelist is not None:
+            logger.info('Unblocking whitelist')
+            rows = webconn.call(module='api.blocking',
+                                method='unblockSet',
+                                resSet=whitelist,
+                                **config['API'])
+            logger.info('Unblocked ' + str(rows))
+            rowsdict['Undone'] = rows
+
         # Updating the state in the database
         result = 'Blocking results\n' + '\n'.join(k + ':' + str(v) for k,v in rowsdict.items())
         # Updating the state in database
